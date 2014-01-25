@@ -2,7 +2,6 @@
 #define VISUALS_H	
 
 #include "matrix.h"
-#include "quaternion.h"
 #include "glut.h"
 #include "controls.h"
 
