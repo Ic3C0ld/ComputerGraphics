@@ -2,7 +2,48 @@
 #include "globals.h"
 
 
-float rotx = 0.0;
+float roty = 0.0;
+
+
+Matrix R(4,4);
+Matrix w(4, 1);
+
+Matrix dR_dt(4, 4);
+
+double particle[] = { 0, 1, 2, 3, 4, -1, -2, -3, -4,
+					  0, 0, 0, 0, 0, 0, 0, 0, 0,
+					  0, 0, 0, 0, 0, 0, 0, 0, 0,
+					  1, 1, 1, 1, 1, 1, 1, 1, 1, };
+
+Matrix particle9(4,9);
+Matrix particles2(4,9);
+
+
+double mat[100 * 100];
+
+void testVariableSetup()
+{
+	setIdentity(R);
+
+	double wMat[] = {0,0.1,0,0};
+	w = Matrix(4,1,wMat);
+
+	double dR_mat[] = {		  0,	-w.mat[2],		w.mat[1],		0,
+					   w.mat[2],			0,		-w.mat[0],		0,
+					  -w.mat[1],	 w.mat[0],			   0,		0,
+							  0,			0,			   0,		1	};
+
+
+	for (int i = 0; i < 100 * 100; i++)
+	{
+		mat[i] = 0;
+	}
+	dR_dt = Matrix(4, 4, dR_mat);
+	particle9 = Matrix(4, 9, particle);
+	particles2 = Matrix(4, 9, particle);
+
+}
+
 
 void Render()
 {
@@ -18,110 +59,37 @@ void Render()
 
 	////////////// DRAWING /////////////////////////////
 
-	double n[] = { 0, 1, 0 };
-	Matrix normal(3, 1,n );
-
-	double p[] = { 0, 0, 0 };
-	Matrix Point(3, 1, p);
-
-
-	double A = normal.mat[0];
-	double B = normal.mat[1];
-	double C = normal.mat[2];
-
-	Matrix temp(normal.traspose());
-
-
-
-	Matrix temp2(normal.traspose()*Point);
-
-	double D = (normal*Point).getMat()[0];
-
-
-
 
 	//// TESTING   ///////////////////////////////////////////////
-		
-	//glColor3f(1, 1, 1);
-	double axis[] = {1, 1, 1};
-	double point[] = { 0, 0, 0 };
-	//glTranslatef(0, 0, -100);
-	
 	
 
-	double PlanePoints[] = {-0.5,	 -0.5,	0.5,	0.5,
-							 0,		 0,		0,		0,
-							-0.5,	 0.5,	0.5,	 -0.5,
-							1,		1,		1,		1	};
+//	R = dR_dt*R;
 
-	double refNormal[] = { 0, 1, 0 };
-
-	Matrix RefPlane(4, 4, PlanePoints);
-	Matrix RefNormal(3, 1, refNormal);
-
-	//glScalef(20, 20, 20);
-
-
-
-	//glMultMatrixd(rotTdegrees((rotx), axis, point).getMat());
-
-
-	/*glBegin(GL_QUAD_STRIP);
-	glVertex3f(-0.5,-0.5,0);
-	glVertex3f(0.5,-0.5,0);
-	glVertex3f(-0.5, 0.5, 0);
-	glVertex3f(0.5, -0.5, 0);
-	glEnd();*/
-
-	
-	glScalef(10, 10, 10);
-
-	glBegin(GL_QUADS);
-	glVertex3f(RefPlane.getColumn(0).mat[0], RefPlane.getColumn(0).mat[1], RefPlane.getColumn(0).mat[2] );
-	glVertex3f(RefPlane.getColumn(1).mat[0], RefPlane.getColumn(1).mat[1], RefPlane.getColumn(1).mat[2]);
-	glVertex3f(RefPlane.getColumn(2).mat[0], RefPlane.getColumn(2).mat[1], RefPlane.getColumn(2).mat[2]);
-	glVertex3f(RefPlane.getColumn(3).mat[0], RefPlane.getColumn(3).mat[1], RefPlane.getColumn(3).mat[2]);
-	glEnd();
-
-	double axisX[] = { 1, 0, 0 };
-
+	R = R+dR_dt*R;
+	particles2 = R*particles2;
 	
 	
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		//RefPlane = rot(M_PI/100 , axisX, point)*RefPlane;
-		//RefPlane = translate(0, 2, 0)*rotX(180 / 100)*RefPlane;
-
-		//RefPlane = translate(0, 2, 0)*RefPlane;
-
-		
-
-		glRotated(180 / 100, 1, 0, 0);
-		glTranslated(0, 2, 0);
-
-
-
-		glBegin(GL_QUADS);
-		glVertex3f(RefPlane.mat[0], RefPlane.mat[4], RefPlane.mat[8]);
-		glVertex3f(RefPlane.mat[1], RefPlane.mat[5], RefPlane.mat[9]);
-		glVertex3f(RefPlane.mat[2], RefPlane.mat[6], RefPlane.mat[10]);
-		glVertex3f(RefPlane.mat[3], RefPlane.mat[7], RefPlane.mat[11]);
-		glEnd();
-
-
+		Matrix(100, 100,mat);
 	}
 	
+	/*for (int i = 0; i < particles2.m_columns; i++)
+	{
+		glPushMatrix();
+		glTranslatef(particles2.mat[0 * particles2.m_columns + i], particles2.mat[1 * particles2.m_columns + i], particles2.mat[2 * particles2.m_columns + i]);
+		glutSolidSphere(1, 20, 20);
+		glPopMatrix();
+
+	}*/
 	
-
-
-
-	//glMultMatrixd(rotTdegrees((rotx), axis, point).getMat());
+	//glMultMatrixd(R.transpose().getMat());
+    //	glutSolidTeapot(10);
 
 
 
 
-	//glutSolidSphere(10, 1000, 1000);
-	//glutSolidTeapot(5.0);
+	
 
 	glutSwapBuffers();          
 }
@@ -132,7 +100,7 @@ void Render()
 
 void Idle()
 {
-	rotx += 0.2;
+	roty += 0.2;
 
 	glutPostRedisplay();
 }
@@ -140,6 +108,9 @@ void Idle()
 
 void Setup()  // TOUCH IT !! 
 {
+	testVariableSetup();
+
+
 	initCameraVars();
 	initControlVars();
 

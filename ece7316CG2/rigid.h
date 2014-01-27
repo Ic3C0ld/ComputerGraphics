@@ -4,10 +4,28 @@
 #include <vector>
 #include "matrix.h"
 
+
+#define RIGID_BASE 0
+#define RIGID_PLANE 1
+#define RIGID_SPHERE 2
+#define RIGID_PARTICLE 3
+#define RIGID_SPRING 4
+
+
+
+
+
+
 class Rigid;
 class Sphere;
+class Particle;
 class Plane;
-class StringSystem;
+class SpringSystem;
+
+
+
+
+
 
 
 class Rigid
@@ -36,26 +54,22 @@ public:
 	Matrix v ;			//3x3 velocity
 	Matrix w ;			//3x3 angular velocity
 
+	///// Unnecessary :/  ////////////////////
 	bool justCollided;
-	///// Unnecessary ////////////////////
+
 	double color[3];
-	int whatAmI;
+	int id;
 	/////////////////////////////////////
-	bool Questionflags[10]; ////to implement the questions in order
+	
 
 
 
 
-	virtual void calculate_forces();
-	virtual void calculate_ddt();
-
-	virtual void setState(std::vector<double> &);
-	virtual std::vector<double> getState();
-
+	
 	virtual void draw();
 
-	virtual void checkCollision(Rigid&);
-	virtual void collide(Rigid&);
+	virtual void checkCollision(Rigid*);
+	virtual void collide(Rigid*);
 	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
 
 

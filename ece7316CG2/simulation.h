@@ -12,9 +12,10 @@ public:
 	Simulation(int ObjectCount=20);
 
 
-	std::vector<Rigid> objects; // will always add 4 planes
 
-	void ode(Rigid&, double deltaT); //this will only call each Rigid's "calc_ddt" and "setStates"
+	void update();
+	std::vector<Rigid*> objects; // will always add 4 planes
+	
 
 
 };

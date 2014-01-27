@@ -17,6 +17,7 @@ Matrix::Matrix(unsigned rows, unsigned columns, double* MatTable)
 	m_columns = (columns>1) ? columns : 1;
 	m_size = m_rows* m_columns;
 
+	mat.reserve(m_size);
 	for (int i = 0; i < m_size; i++)
 	{
 		mat.push_back( MatTable[i] );
@@ -201,7 +202,7 @@ void transpose(Matrix& A )
 	// SLOW IMPLEMENTATION
 	//Matrix temp=A.getColumn(0);
 	//temp.m_columns = temp.m_rows;//
-	//temp.m_rows = 1;			// Hack to traspose first column into a row
+	//temp.m_rows = 1;			// Hack to transpose first column into a row
 
 	//for (int i = 1; i < A.m_columns; i++)
 	//{
@@ -255,7 +256,7 @@ void invert(Matrix& A)
 			}
 		}
 
-		Matrix Inverse = Cofactors.traspose() / determinant(A);
+		Matrix Inverse = Cofactors.transpose() / determinant(A);
 
 		A = Inverse;
 	}
@@ -303,7 +304,8 @@ void setIdentity(Matrix& A)
 
 	for (int i = 0; i < least; i++)
 	{
-		A.mat[i] = 1;
+		
+			A.mat[i+i*A.m_columns] = 1;
 	}
 
 
@@ -405,7 +407,7 @@ bool Matrix::isVector()
 		return false;
 	}
 }
-Matrix Matrix::traspose()
+Matrix Matrix::transpose()
 {
 	/*Matrix transposed = (*this);
 	transpose(transposed);
@@ -457,7 +459,7 @@ Matrix Matrix::inverse()
 			}
 		}
 
-		Matrix Inverse = Cofactors.traspose() / determinant(*this);
+		Matrix Inverse = Cofactors.transpose() / determinant(*this);
 
 		return Inverse;
 	}
@@ -632,7 +634,7 @@ Matrix rot(double w, double axis[], double point[])
 
 	Matrix C(4, 4, matrix);
 
-	return C.traspose();
+	return C.transpose();
 
 	
 }

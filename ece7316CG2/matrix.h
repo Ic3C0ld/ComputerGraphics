@@ -91,7 +91,7 @@ public:
 	double norm();//has meaning if Matrix Nx1 or 1xM...
 	
 	Matrix inverse();
-	Matrix traspose();
+	Matrix transpose();
 	double det();
 
 	void DeleteRow(unsigned);
