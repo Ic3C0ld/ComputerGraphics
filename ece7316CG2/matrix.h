@@ -51,6 +51,8 @@ Matrix translate(double dx, double dy, double dz);
 Matrix translate(double* dXdYdZ);
 Matrix rot(double theta, double axis[], double point[]);
 Matrix rotT(double w, double axis[], double point[]);
+Matrix scale(double x, double y, double z);
+
 //
 Matrix rotX(double theta, bool useDegrees = false);
 Matrix rotY(double theta, bool useDegrees = false);
@@ -138,7 +140,7 @@ public:
 	friend Matrix translate(double*);
 	friend Matrix rot(double theta, double axis[], double point[]);
 	friend Matrix rotTdegrees(double w, double axis[], double point[]);
-
+	friend Matrix scale(double x, double y, double z);
 	//////OTHER
 	//friend Matrix vector3DtoMatrix(Vector3D&);
 	//friend Vector3D MatrixtoVector3D(Matrix&);

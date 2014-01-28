@@ -305,7 +305,7 @@ void setIdentity(Matrix& A)
 	for (int i = 0; i < least; i++)
 	{
 		
-			A.mat[i+i*A.m_columns] = 1;
+			A.mat[i+i*A.m_columns] = 1;//A[i][i]
 	}
 
 
@@ -639,7 +639,15 @@ Matrix rot(double w, double axis[], double point[])
 	
 }
 
+Matrix scale(double x, double y, double z)
+{
+	double scaleMat[] = {	x,	0,	0,	0,
+							0,	y,	0,	0,
+							0,	0,	z,	0,
+							0,	0,	0,	1	};
 
+	return Matrix(4,4,scaleMat);
+}
 //// OTHER //////////////
 //Matrix vector3DtoMatrix(Vector3D& v)
 //{

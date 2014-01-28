@@ -19,6 +19,9 @@
     <ClCompile Include="visuals.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="quaternion.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="controls.h">
@@ -40,6 +43,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="visuals.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="quaternion.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

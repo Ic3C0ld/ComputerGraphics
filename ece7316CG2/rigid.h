@@ -11,17 +11,11 @@
 #define RIGID_PARTICLE 3
 #define RIGID_SPRING 4
 
-
-
-
-
-
 class Rigid;
 class Sphere;
 class Particle;
 class Plane;
 class SpringSystem;
-
 
 
 
@@ -37,63 +31,74 @@ public:
 
 
 	////// State Variables //////////////////
-	Matrix  X_t ;		//3x1	position of center mass
-	Matrix  R_t ;		//3x3	rotation matrix
-	Matrix  P_t ;		//3x1	m*u
-	Matrix  L_t ;		//3x1	I*w
-
-	////// State Derivatives ///////////////
-	Matrix  dX_dt;		//3x1	position
-	Matrix  dR_dt;		//3x3	rotation matrix
-	Matrix  dP_dt;		//3x1	m*u
-	Matrix  dL_dt;		//3x1	torque
-
-	///// Extra info //////////////////////
-	Matrix I;			//3x3 Inertia
-	Matrix Iinv ;		//3x3 Inverse Inertia
-	Matrix v ;			//3x3 velocity
-	Matrix w ;			//3x3 angular velocity
-
+	//
+	//Each subClass will have its own, because of variety 
+	//it doesnt make sense to define so many to cover them all
+	//
 	///// Unnecessary :/  ////////////////////
-	bool justCollided;
+	bool m_justCollided;
+	double m_color[3];
 
-	double color[3];
-	int id;
+	////Hopefully these will make casts unnecessary
+	////These pointers will either be NULL or pointer == *this if ->id == this->id
+	int m_id;
+	int getWhatAmI();				//// will return defines suppose Plane==1,Sphere==2 etc...
+
+	Plane* p_plane;
+	Sphere* p_sphere;
+	Particle* p_particle;
+	SpringSystem* p_spring;
+
 	/////////////////////////////////////
+			
+	virtual void draw()=0;
+
+	virtual void checkCollision(Rigid*)=0;
+	virtual void calcCollisionResponse(Rigid*) = 0;
+	virtual void applyCollisionResponse()=0;
+	virtual void update(double dt)=0;
+
 	
-
-
-
-
-	
-	virtual void draw();
-
-	virtual void checkCollision(Rigid*);
-	virtual void collide(Rigid*);
-	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
-
-
 };
 
 
+class Plane : public Rigid
+{
+public:
+	Plane(double size=1);
+	Plane(double size, double color[]);
+
+	//			m_plane N==normal of plane and all rest are the plane's points minimum 3 
+	////	[	nx	p0x p1x p2x	p3x	...	]
+	////	[	ny	p0y	p2y	p2x	p3x	...	]
+	////	[	nz	p0z	p2z	p2x	p3x	...	]
+	////	[	0	1	1	1	1	...	]
+	////
+	Matrix m_plane;
+
+	virtual void draw();
+
+	virtual void checkCollision(Rigid*);
+	virtual void calcCollisionResponse(Rigid*);
+	virtual void applyCollisionResponse();
+	virtual void update(double dt);
+
+
+};
 
 
 class Sphere :public Rigid
 {
 public:
 	Sphere(double size, double mass, double Pxyz[], double Vxyz[]);
-	virtual void calculate_forces();
-	virtual void calculate_ddt();
-
-	virtual void setState(std::vector<double> &);
-	virtual std::vector<double> getState();
+	
 
 	virtual void draw();
 
-	virtual void checkCollision(Rigid&);
-	virtual void collide(Rigid&);
-	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
-
+	virtual void checkCollision(Rigid*);
+	virtual void calcCollisionResponse(Rigid*) ;
+	virtual void applyCollisionResponse();
+	virtual void update(double dt);
 
 };
 
@@ -103,59 +108,27 @@ class Particle : public Rigid
 public:
 	Particle(int partCount,double totalMass,double Pxyz[],double Vxyz[],double Wxyz );
 
-	virtual void calculate_forces();
-	virtual void calculate_ddt();
-
-	virtual void setState(std::vector<double> &);
-	virtual std::vector<double> getState();
-
 	virtual void draw();
 
-	virtual void checkCollision(Rigid&);
-	virtual void collide(Rigid&);
-	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
-
+	virtual void checkCollision(Rigid*);
+	virtual void calcCollisionResponse(Rigid*);
+	virtual void applyCollisionResponse();
+	virtual void update(double dt);
 
 };
 
-class Plane : public Rigid
-{
-public:
-	Plane(double size);
-	virtual void calculate_forces();
-	virtual void calculate_ddt();
-
-	virtual void setState(std::vector<double> &);
-	virtual std::vector<double> getState();
-
-	virtual void draw();
-
-	virtual void checkCollision(Rigid&);
-	virtual void collide(Rigid&);
-	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
-
-
-	Matrix normal;
-	double A,B,C,D;         //in order to formulate
-};
 
 class StringSystem : public Rigid
 {
 public:
 	StringSystem();
 
-	virtual void calculate_forces();
-	virtual void calculate_ddt();
-
-	virtual void setState(std::vector<double> &);
-	virtual std::vector<double> getState();
-
 	virtual void draw();
 
-	virtual void checkCollision(Rigid&);
-	virtual void collide(Rigid&);
-	virtual int getWhatAmI();				//// will return defines suppose Sphere==1,Particle==2 etc...
-
+	virtual void checkCollision(Rigid*);
+	virtual void calcCollisionResponse(Rigid*);
+	virtual void applyCollisionResponse();
+	virtual void update(double dt);
 
 };
 

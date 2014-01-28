@@ -75,6 +75,7 @@
     <ClInclude Include="globals.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="matrix.h" />
+    <ClInclude Include="quaternion.h" />
     <ClInclude Include="rigid.h" />
     <ClInclude Include="simulation.h" />
     <ClInclude Include="visuals.h" />
@@ -83,6 +84,7 @@
     <ClCompile Include="controls.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="quaternion.cpp" />
     <ClCompile Include="rigid.cpp" />
     <ClCompile Include="simulation.cpp" />
     <ClCompile Include="visuals.cpp" />

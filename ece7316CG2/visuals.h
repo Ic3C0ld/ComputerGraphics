@@ -2,9 +2,11 @@
 #define VISUALS_H	
 
 #include "matrix.h"
+#include "quaternion.h"
 #include "glut.h"
 #include "controls.h"
-
+#include "rigid.h"
+#include "simulation.h"
 
 //-------- Functions --------------------------------
 
@@ -24,5 +26,9 @@ void Idle();
 void lights();
 
 void projectionReset();
+
+
+
+void drawFloor();
 
 #endif
