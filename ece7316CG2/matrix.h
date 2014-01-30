@@ -90,6 +90,9 @@ public:
 
 ////METHODS///////
 	Matrix& operator=(const Matrix& );
+	Matrix& operator+=(const Matrix&);
+	Matrix& operator-=(const Matrix&);
+
 	double norm();//has meaning if Matrix Nx1 or 1xM...
 	
 	Matrix inverse();

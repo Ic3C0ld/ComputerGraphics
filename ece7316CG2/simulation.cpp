@@ -7,7 +7,7 @@
 
 Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 {
-	sim_dt = target_dt = 0.0001; //for now
+	sim_dt = target_dt = 0.001; //for now
 	
 	
 //// BOX: Create planes  ////////////////////////
@@ -56,6 +56,31 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 
 //////////////////////////// BOX READY //////////////
 
+	srand(time(NULL));
+
+	
+	for (int i = 0; i < spheres;i++)
+	{
+
+
+		double radius = 0.01*(rand() % 100) + 1;
+		double mass = pow(radius, 3);
+
+		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius), (rand() % (int)(boxSize - 2*radius))+radius, (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius) };
+		double v_t[] = { 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10 };
+
+		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
+
+
+		
+
+
+		Sphere *temp = new Sphere(radius, mass, x_t, v_t, color3);
+
+		objects.push_back(temp);
+	}
+	
+
 
 
 
@@ -69,4 +94,23 @@ void Simulation::draw()
 	{
 		objects[i]->draw();
 	}
+
+}
+void Simulation::update(double simdt)
+{
+	for (int i = 0; i < objects.size(); i++)
+	{
+		for (int j = i+1; j < objects.size(); j++)
+		{
+			objects[i]->checkCollision(objects[j]);
+		}
+	}
+
+	for (int i = 0; i < objects.size(); i++)
+	{
+		//objects[i]->applyCollisionResponse();
+		objects[i]->update(simdt);
+	}
+
+	
 }

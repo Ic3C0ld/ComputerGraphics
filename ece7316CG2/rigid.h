@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "matrix.h"
-
+#include "quaternion.h"
 
 #define RIGID_BASE 0
 #define RIGID_PLANE 1
@@ -18,7 +18,16 @@ class Plane;
 class SpringSystem;
 
 
+void calcCollision(Plane*, Sphere*);
+void calcCollision(Plane*, Particle*);
+void calcCollision(Plane*, SpringSystem*);
+void calcCollision(Plane*, Sphere*);
 
+void calcCollision(Sphere*, Sphere*);
+void calcCollision(Sphere*, Particle*);
+void calcCollision(Sphere*, SpringSystem*);
+
+void calcCollision(Particle*, SpringSystem*);
 
 
 
@@ -54,7 +63,6 @@ public:
 	virtual void draw()=0;
 
 	virtual void checkCollision(Rigid*)=0;
-	virtual void calcCollisionResponse(Rigid*) = 0;
 	virtual void applyCollisionResponse()=0;
 	virtual void update(double dt)=0;
 
@@ -79,7 +87,6 @@ public:
 	virtual void draw();
 
 	virtual void checkCollision(Rigid*);
-	virtual void calcCollisionResponse(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
 
@@ -90,15 +97,21 @@ public:
 class Sphere :public Rigid
 {
 public:
-	Sphere(double size, double mass, double Pxyz[], double Vxyz[]);
+	Sphere(double radius, double mass, double Pxyz[], double Vxyz[], double color3[]);
 	
+	double m_radius, m_mass;
+	
+	Matrix X_t,V_t;
 
 	virtual void draw();
 
 	virtual void checkCollision(Rigid*);
-	virtual void calcCollisionResponse(Rigid*) ;
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
+
+	//
+	
+	Matrix applyV_t;//this will be calculated in a collision,
 
 };
 
@@ -106,12 +119,22 @@ public:
 class Particle : public Rigid
 {
 public:
-	Particle(int partCount,double totalMass,double Pxyz[],double Vxyz[],double Wxyz );
+	Particle(int partCount, double radius, double totalMass, double Pxyz[], double Vxyz[], double Wxyz[]);//Homogeneous points and vectors
+
+	///// ALL INFO here /////////////////////
+	Matrix points,	I,I_1,	x_t,v_t,	w_t,R_t;
+	Quaternion rotation;
+
+	double m_radius, m_mass;
+
+	Matrix currentPoints;
+	///// ALL INFO here /////////////////////
+
+
 
 	virtual void draw();
 
 	virtual void checkCollision(Rigid*);
-	virtual void calcCollisionResponse(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
 
@@ -126,7 +149,6 @@ public:
 	virtual void draw();
 
 	virtual void checkCollision(Rigid*);
-	virtual void calcCollisionResponse(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
 

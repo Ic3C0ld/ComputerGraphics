@@ -3,8 +3,8 @@
 
 float roty = 0.0;
 
-Simulation simulation(/*BoxSize*/60,/*Spheres*/20,/*Particles*/0, /*Springs*/0);
-
+Simulation simulation(/*BoxSize*/50,/*Spheres*/10,/*Particles*/0, /*Springs*/0);
+double targetdt=0.02;
 
 void testVariableSetup()
 {
@@ -29,14 +29,29 @@ void Render()
 
 
 	////////////// DRAWING /////////////////////////////
-	simulation.draw();
+
+	//simulation.draw();
 
 	//// TESTING   ///////////////////////////////////////////////
 	
+	int count = 8;
+	double mass = 10;
+	double radius = 2;
+	double Pxyz[] = { 0, 20, 0, 0 };
+	double Vxyz[] = { 0, 20, 0, 0 };
+	double w[] = { 0, 20, 0, 0 };
+
+	Particle particle(count ,radius,mass,Pxyz,Vxyz,w);
+
+
+	particle.draw();
+
+
+
+
+
 
 	
-
-
 
 
 	glutSwapBuffers();          
@@ -47,7 +62,7 @@ void Render()
 void Idle()
 {
 	roty += 0.002;
-
+	//simulation.update(targetdt);
 	glutPostRedisplay();
 }
 
@@ -76,9 +91,9 @@ void Setup()  // TOUCH IT !!
 	glEnable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	/*glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-*/
+
 
 	// Black background
 	glClearColor(0.05f, 0.05f, 0.05f, 1.0f);

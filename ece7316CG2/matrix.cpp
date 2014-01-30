@@ -83,7 +83,24 @@ Matrix& Matrix::operator=(const Matrix& other)
 
 	return *this;
 }
+Matrix& Matrix::operator+=(const Matrix& other)
+{
+	for (int i = 0; i < m_size; i++)
+	{
+		mat[i] += other.mat[i];
+	}
 
+	return *this;
+}
+Matrix& Matrix::operator-=(const Matrix& other)
+{
+	for (int i = 0; i < m_size; i++)
+	{
+		mat[i] -= other.mat[i];
+	}
+
+	return *this;
+}
 ///////////////// MATRIX's FRIENDS :) ////////////////
 Matrix operator+(Matrix& A, Matrix& B)
 {
@@ -314,7 +331,7 @@ void setZeros(Matrix& A)
 {
 	for (int i = 0; i < A.m_size; i++)
 	{
-		A.mat[i] = 1;
+		A.mat[i] = 0;
 	}
 }
 void setOnes(Matrix& A)
