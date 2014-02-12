@@ -3,12 +3,24 @@
 
 float roty = 0.0;
 
-Simulation simulation(/*BoxSize*/50,/*Spheres*/10,/*Particles*/0, /*Springs*/0);
-double targetdt=0.02;
+Simulation simulation(/*BoxSize*/20,/*Spheres*/0,/*Particles*/1, /*Springs*/0);
+double targetdt=0.005;
+
+
+
+int count = 5;
+double mass = 10;
+double radius = 1;
+double Pxyz[] = { 0, 20, 0, 0 };
+double Vxyz[] = { 3, 1, 5, 0 };
+double w[] = { 0, 20, 0, 0 };
+double color3[] = {1,0,1};
+//Particle particle(count, radius, mass, Pxyz, Vxyz, w,color3);
+
 
 void testVariableSetup()
 {
-
+	
 	
 }
 
@@ -30,28 +42,16 @@ void Render()
 
 	////////////// DRAWING /////////////////////////////
 
-	//simulation.draw();
+	simulation.draw();
 
 	//// TESTING   ///////////////////////////////////////////////
 	
-	int count = 8;
-	double mass = 10;
-	double radius = 2;
-	double Pxyz[] = { 0, 20, 0, 0 };
-	double Vxyz[] = { 0, 20, 0, 0 };
-	double w[] = { 0, 20, 0, 0 };
-
-	Particle particle(count ,radius,mass,Pxyz,Vxyz,w);
-
-
-	particle.draw();
-
-
-
-
-
-
 	
+
+
+	/*particle.draw();
+	particle.update(targetdt/10);*/
+
 
 
 	glutSwapBuffers();          
@@ -62,7 +62,7 @@ void Render()
 void Idle()
 {
 	roty += 0.002;
-	//simulation.update(targetdt);
+	simulation.update(targetdt);
 	glutPostRedisplay();
 }
 
@@ -75,6 +75,7 @@ void Setup()  // TOUCH IT !!
 	initCameraVars();
 	initControlVars();
 
+	glEnable(GL_BLEND);
 
 	//Parameter handling
 	glShadeModel(GL_SMOOTH);
@@ -131,7 +132,7 @@ void lights()
 	GLfloat light_position[] = { 0.0, 30.0, 50.0, 0.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-	GLfloat ambientLight[] = { 0.15, 0.15, 0.15, 1.0 };
+	GLfloat ambientLight[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat diffuseLight[] = { 0.9, 0.9, 0.9, 1.0 };
 	GLfloat specularLight[] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -160,7 +161,8 @@ void drawFloor()
 	double dx = 8;
 	double dz = 8;
 
-
+	glPushAttrib(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 0.5, 0.5);
 	glPolygonMode(GL_FRONT, GL_LINE);
 
 	for (int j = 0; j <30; j++)
@@ -186,4 +188,6 @@ void drawFloor()
 
 	}
 	glPolygonMode(GL_FRONT, GL_FILL);
+
+	glPopAttrib();
 }

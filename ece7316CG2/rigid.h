@@ -19,11 +19,15 @@ class SpringSystem;
 
 
 void calcCollision(Plane*, Sphere*);
-void calcCollision(Plane*, Particle*);
+void calcCollision(Plane* plane, Particle* particle, Matrix cp/*ContactPoint*/,
+													 Matrix  rp/*RelativePosFromCenterMass*/,
+													 Matrix vp /*VelocityofCp*/,
+													 Matrix n /*collision normal */,
+													 double vr/*Relative Velocity on the normal*/);
 void calcCollision(Plane*, SpringSystem*);
 void calcCollision(Plane*, Sphere*);
 
-void calcCollision(Sphere*, Sphere*);
+void calcCollision(Sphere* s1, Sphere* s2, Matrix normal12,double vrel);
 void calcCollision(Sphere*, Particle*);
 void calcCollision(Sphere*, SpringSystem*);
 
@@ -65,6 +69,8 @@ public:
 	virtual void checkCollision(Rigid*)=0;
 	virtual void applyCollisionResponse()=0;
 	virtual void update(double dt)=0;
+	virtual double getKinetik()=0;
+	virtual Matrix getMomentum()=0;
 
 	
 };
@@ -89,7 +95,8 @@ public:
 	virtual void checkCollision(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
-
+	virtual double getKinetik();
+	virtual Matrix getMomentum();
 
 };
 
@@ -108,7 +115,8 @@ public:
 	virtual void checkCollision(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
-
+	virtual double getKinetik();
+	virtual Matrix getMomentum();
 	//
 	
 	Matrix applyV_t;//this will be calculated in a collision,
@@ -119,15 +127,17 @@ public:
 class Particle : public Rigid
 {
 public:
-	Particle(int partCount, double radius, double totalMass, double Pxyz[], double Vxyz[], double Wxyz[]);//Homogeneous points and vectors
+	Particle(int partCount, double radius, double totalMass, double Pxyz[], double Vxyz[], double Wxyz[],double color3[]);//Homogeneous points and vectors
 
 	///// ALL INFO here /////////////////////
 	Matrix points,	I,I_1,	x_t,v_t,	w_t,R_t;
 	Quaternion rotation;
 
 	double m_radius, m_mass;
+	
+	Matrix currentPoints,cI,cI_1;
 
-	Matrix currentPoints;
+	Matrix dw, dv; 
 	///// ALL INFO here /////////////////////
 
 
@@ -137,7 +147,8 @@ public:
 	virtual void checkCollision(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
-
+	virtual double getKinetik() ;
+	virtual Matrix getMomentum() ;
 };
 
 
@@ -151,7 +162,8 @@ public:
 	virtual void checkCollision(Rigid*);
 	virtual void applyCollisionResponse();
 	virtual void update(double dt);
-
+	virtual double getKinetik();
+	virtual Matrix getMomentum();
 };
 
 

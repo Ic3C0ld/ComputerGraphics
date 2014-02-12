@@ -204,9 +204,14 @@ Matrix cross(Matrix& v1, Matrix& v2)
 
 	double mat[] = { y1*z2-z1*y2,	
 					 z1*x2-x1*z2,
-					 x1*y2-y1*x2 };
+					 x1*y2-y1*x2,
+					 0 };
 
-	return Matrix(3, 1, mat);
+	if (v1.m_size==3||v2.m_size==3)
+		return Matrix(3, 1, mat);
+	
+	return Matrix(4, 1, mat);
+
 }
 
 void transpose(Matrix& A )
@@ -426,10 +431,6 @@ bool Matrix::isVector()
 }
 Matrix Matrix::transpose()
 {
-	/*Matrix transposed = (*this);
-	transpose(transposed);
-	return transposed;*/
-
 	if (m_rows == 1 || m_columns == 1)
 	{
 		Matrix T(*this);

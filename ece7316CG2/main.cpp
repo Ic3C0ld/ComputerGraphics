@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
 
-	glutInitWindowSize(800, 800);
+	glutInitWindowSize(1200, 800);
 	glutInitWindowPosition(100, 50);
 
 	// Create and label the main window

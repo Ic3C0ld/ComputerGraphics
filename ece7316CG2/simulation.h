@@ -3,8 +3,11 @@
 
 #include <vector>
 #include <ctime>
-
+#include <iostream>//for debugging purposes
+#include <cstdlib>//for debugging
 #include "rigid.h"
+#include "controls.h"
+
 
 class Simulation
 {

@@ -16,7 +16,9 @@ static double xScroll, yScroll;
 
 static bool FPSmode;
 
+//////// Simulation Info for HUD //////////////////////////////
 
+double totalKinetic;
 
 
 
@@ -34,6 +36,7 @@ void initControlVars()
 	mouseLoc[0] = 450;// what ever initWindowSize says divided by 2
 	mouseLoc[1] = 450;
 
+	totalKinetic = 0;
 }
 void keyboardDown(unsigned char key, int x, int y)
 {
@@ -82,7 +85,7 @@ void specialKeyFunc(int key, int x, int y)
 //////////MOUSE//
 void  mousePassiveMotion(int x, int y)
 {
-	if ( FPSmode == true)
+	if (FPSmode == true || isKeyPressed['x'] == true)
 	{
 
 		int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -138,7 +141,7 @@ void  mouseFunc(int button, int state, int x, int y)
 		isMousePressed[0] = false;
 	}
 	//MIDDLE BUTTON
-	if (state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON)
+	if ((state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON)  )
 	{
 		glutSetCursor(GLUT_CURSOR_NONE);
 		isMousePressed[2] = true;
@@ -149,6 +152,8 @@ void  mouseFunc(int button, int state, int x, int y)
 		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 		isMousePressed[2] = false;
 	}
+
+	
 
 }
 void  mouseMotion(int x, int y)
@@ -186,7 +191,7 @@ void  mouseMotion(int x, int y)
 
 	//////TO BE ADDED
 	//Mouse event handling based and isMousePressed && isKeyPressed
-	if (isMousePressed[2] == true)
+	if (isMousePressed[2] == true )
 	{
 		 theta += (y - mouseLoc[1]) / 400;
 		 phi -= (x - mouseLoc[0]) / 400;

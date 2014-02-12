@@ -1,9 +1,9 @@
 #include "simulation.h"
 
 
+extern double totalKinetic;
 
 //Class Simulation//
-
 
 Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 {
@@ -57,32 +57,58 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 //////////////////////////// BOX READY //////////////
 
 	srand(time(NULL));
-
-	
+/////	SPHERES		////////////////
 	for (int i = 0; i < spheres;i++)
 	{
 
 
-		double radius = 0.01*(rand() % 100) + 1;
-		double mass = pow(radius, 3);
+		double radius = 0.02*(rand() % 100) + 1;
+		double mass = 4*pow(radius, 3);
 
 		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius), (rand() % (int)(boxSize - 2*radius))+radius, (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius) };
-		double v_t[] = { 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10 };
+		double v_t[] = { (rand() % 200) - 10, (rand() % 200) - 10, (rand() % 200) - 10 };
 
 		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
 
-
-		
-
-
 		Sphere *temp = new Sphere(radius, mass, x_t, v_t, color3);
-
+		
+		
 		objects.push_back(temp);
 	}
-	
 
 
 
+	/*for (int i = 0; i < 6; i++)
+	{
+		objects[i]->p_plane->m_plane = translate(0,10,0)*rotX(45, true)* objects[i]->p_plane->m_plane;
+	}*/
+	//////////////////////////// Spheres READY //////////////
+
+
+	/////	PARTICLES		////////////////
+	for (int i = 0; i < particles; i++)
+	{
+		double radius = 0.02*(rand() % 100) + 0.3;
+		double mass = 4 * pow(radius, 3);
+
+
+		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius),
+									(rand() % (int)(boxSize - 2 * radius)) + radius	,
+						(rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius)	,
+																				1 };
+		//double v_t[] = { (rand() % 200) - 10, (rand() % 200) - 10, (rand() % 200) - 10 ,0};
+		//double w_t[] = { 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10 ,0};
+		double v_t[] = { -30,0,0,0};
+
+		double w_t[] = {0, 10, 0,0};
+
+		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
+
+		Particle *p = new Particle(5, radius, mass, x_t, v_t, w_t,color3);
+		objects.push_back(p);
+
+	}
+	//////////////////////////// Particles READY //////////////
 
 }
 
@@ -104,13 +130,25 @@ void Simulation::update(double simdt)
 		{
 			objects[i]->checkCollision(objects[j]);
 		}
+
 	}
 
 	for (int i = 0; i < objects.size(); i++)
 	{
-		//objects[i]->applyCollisionResponse();
+		objects[i]->applyCollisionResponse();
 		objects[i]->update(simdt);
+		
 	}
 
-	
+	double totalKinetic = 0;
+	for (int i = 0; i < objects.size(); i++)
+	{
+		totalKinetic += objects[i]->getKinetik();
+	}
+
+	std::cout << "TotalKinetic== " << totalKinetic << std::endl;
+	//system("CLS");
+
+	totalKinetic = 0;
+
 }
