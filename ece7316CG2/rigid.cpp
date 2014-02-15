@@ -493,7 +493,7 @@ Particle::Particle(int PartCount,double radius,double totalMass,double cmPositio
 	m_color[0] = color3[0]; m_color[15] = color3[1]; m_color[2] = color3[2];
 
 
-	//radius *=3;
+	radius *=0.5;
 
 	double point0[] = { radius, radius, radius, 1 };
 	double point1[] = { -radius, radius, radius, 1 };
@@ -519,7 +519,7 @@ Particle::Particle(int PartCount,double radius,double totalMass,double cmPositio
 	points.addColumn(Matrix(4, 1, point7), 0);
 
 
-	//radius /= 3;
+	radius *=2;
 
 
 	/*if ((PartCount % 2)==0)
@@ -739,6 +739,132 @@ void Particle::checkCollision(Rigid* obj)
 
 		break;
 	}
+	case RIGID_SPRING:
+	{
+		Particle* p = this;
+		SpringSystem* s = static_cast<SpringSystem*>(obj);
+
+
+		int pPoints = p->currentPoints.m_columns;
+
+		int col1Points = 0;
+		int col2Points = 0;
+
+		Matrix r12avg(4, 1);	//Spring rAvgs	
+		Matrix r22avg(4, 1);
+		Matrix rb1avg(4, 1);	//particle rAvg
+		Matrix rb2avg(4, 1);
+
+		Matrix navg1(4,1), navg2(4,1);
+
+		for (int i = 0; i < pPoints; i++)
+		{
+			Matrix tp = p->currentPoints.getColumn(i);
+
+			Matrix r12 = tp-s->x1_t ;
+			Matrix r22 = tp-s->x2_t ;
+
+			Matrix n1 = r12 / r12.norm();
+			Matrix n2 = r22 / r22.norm();
+
+			if (r12.norm() < s->m_radius1 + p->m_radius)
+			{//intersection with the first spring ball
+
+				Matrix cP = s->x1_t + n1*s->m_radius1;
+
+				Matrix r1 = cP - s->x1_t;
+				Matrix r2 = cP - p->x_t;
+
+				Matrix v1 = s->v1_t;
+				Matrix v2 = p->v_t + cross(p->w_t, r2);
+
+				double vRel = ((v1 - v2).transpose()*n1).mat[0];
+
+				if (vRel > 0)
+				{//collision with the first spring ball
+
+					r12avg = r12avg + r1;
+					rb1avg = rb1avg + r2;
+					navg1 = navg1 + n1;
+
+					col1Points++;
+					//i = pPoints;//dont allow other collisions ,break the loop
+				}//endif collision
+			}//ENDIF intersection
+
+			if (r22.norm() < s->m_radius1 + p->m_radius)
+			{//intersection with the first spring ball
+
+				Matrix cP = s->x2_t + n2*s->m_radius1;
+
+				Matrix r1 = cP - s->x2_t;
+				Matrix r2 = cP - p->x_t;
+
+				Matrix v1 = s->v2_t;
+				Matrix v2 = p->v_t + cross(p->w_t, r2);
+
+				double vRel = ((v1 - v2).transpose()*n2).mat[0];
+
+				if (vRel > 0)
+				{//collision with the first spring ball
+
+					r22avg = r22avg + r1;
+					rb2avg = rb2avg + r2;
+					navg2 = navg2 + n2;
+
+					col2Points++;
+					//i = pPoints;//dont allow other collisions ,break the loop
+
+				}//endif vRel1>0
+
+			}//ENDIF intersection
+
+		}//END for(i:particle.points)
+
+
+		if (col1Points > 0)
+		{
+			r12avg = r12avg / col1Points;
+			rb1avg = rb1avg / col1Points;
+			navg1 = navg1 / col1Points;
+			normalize(navg1);
+
+			//v1=s->v1_t;
+			Matrix v2 = p->v_t + cross(p->w_t, rb1avg);
+
+			double vRel = ((s->v1_t - v2).transpose()*navg1).mat[0];
+
+			Matrix j = -2 * vRel*navg1 / (1 / s->m_mass1 + 1 / p->m_mass + (navg1.transpose()*p->cI_1*cross(cross(rb1avg, navg1), rb1avg)).mat[0]);
+
+			s->J1 = s->J1 + j;
+
+			p->J.push_back(-1 * j);
+			p->rP.push_back(rb1avg);
+
+		}
+		if (col2Points > 0)
+		{
+			r22avg = r22avg / col2Points;
+			rb2avg = rb2avg / col2Points;
+			navg2 = navg2 / col2Points;
+			normalize(navg2);
+
+			//v1=s->v2_t;
+			Matrix v2 = p->v_t + cross(p->w_t, rb2avg);
+
+			double vRel = ((s->v2_t - v2).transpose()*navg2).mat[0];
+
+			Matrix j = -2 * vRel*navg2 / (1 / s->m_mass2 + 1 / p->m_mass + (navg2.transpose()*p->cI_1*cross(cross(rb2avg, navg2), rb2avg)).mat[0]);
+
+			s->J2 = s->J2 + j;
+
+			p->J.push_back(-1 * j);
+			p->rP.push_back(rb1avg);
+
+		}
+
+
+	}
 	default:
 		break;
 	}
@@ -890,8 +1016,8 @@ void SpringSystem::update(double dt)
 	Matrix n12 = r12 / r12.norm();
 
 	//Spring Force1
-	Matrix F21 = m_k2*(2 * m_radius1 - r12.norm())*n12;
-	Matrix F10 = m_k1*(2 * m_radius2 - r01.norm())*n01;
+	Matrix F21 = (m_k2*(2 * m_radius1 - r12.norm()) /*+ 0.1*m_k2*pow((2 * m_radius1 - r12.norm()),3)*/)*n12;
+	Matrix F10 = (m_k1*(2 * m_radius2 - r01.norm()) /*+ 0.1*m_k1*pow(2 * m_radius2 - r01.norm(),3)*/)*n01;
 
 
 	////CheckCollision with itself
@@ -1026,6 +1152,129 @@ void SpringSystem::checkCollision(Rigid* obj)
 		break;
 	}
 
+	case RIGID_PARTICLE:
+	{
+		Particle* p = static_cast<Particle*>(obj);
+		SpringSystem* s = this;
+
+
+		int pPoints = p->currentPoints.m_columns;
+
+		int col1Points = 0;
+		int col2Points = 0;
+
+		Matrix r12avg(4,1);	//Spring rAvgs	
+		Matrix r22avg(4, 1);
+		Matrix rb1avg(4, 1);	//particle rAvg
+		Matrix rb2avg(4, 1);
+
+		Matrix navg1, navg2;
+
+		for (int i = 0; i < pPoints; i++)
+		{
+			Matrix tp = p->currentPoints.getColumn(i);
+
+			Matrix r12 = s->x1_t - tp;
+			Matrix r22 = s->x2_t - tp;
+
+			Matrix n1 = r12 / r12.norm();
+			Matrix n2 = r22 / r22.norm();
+
+			if (r12.norm() < s->m_radius1 + p->m_radius)
+			{//intersection with the first spring ball
+
+				Matrix cP = s->x1_t + n1*s->m_radius1;
+
+				Matrix r1 = cP - s->x1_t;
+				Matrix r2 = cP - p->x_t;
+
+				Matrix v1 = s->v1_t;
+				Matrix v2 = p->v_t + cross(p->w_t, r2);
+
+				double vRel = ((v1 - v2).transpose()*n1).mat[0];
+
+				if (vRel > 0)
+				{//collision with the first spring ball
+
+					r12avg = r12avg + r1;
+					rb1avg = rb1avg + r2;
+					navg1 = navg1 + n1;
+
+					col1Points++;
+				}//endif collision
+			}//ENDIF intersection
+
+			if (r22.norm() < s->m_radius1 + p->m_radius)
+			{//intersection with the first spring ball
+
+				Matrix cP = s->x2_t + n2*s->m_radius1;
+
+				Matrix r1 = cP - s->x2_t;
+				Matrix r2 = cP - p->x_t;
+
+				Matrix v1 = s->v2_t;
+				Matrix v2 = p->v_t + cross(p->w_t, r2);
+
+				double vRel = ((v1 - v2).transpose()*n2).mat[0];
+
+				if (vRel > 0)
+				{//collision with the first spring ball
+
+					r22avg = r22avg + r1;
+					rb2avg = rb2avg + r2;
+					navg2 = navg2 + n2;
+
+					col2Points++;
+				}//endif vRel1>0
+
+			}//ENDIF intersection
+
+		}//END for(i:particle.points)
+
+
+		if (col1Points > 0)
+		{
+			r12avg = r12avg / col1Points;
+			rb1avg = rb1avg / col1Points;
+			navg1 = navg1 / col1Points;
+			normalize(navg1);
+
+			//v1=s->v1_t;
+			Matrix v2 = p->v_t + cross(p->w_t, rb1avg);
+
+			double vRel = ((s->v1_t - v2).transpose()*navg1).mat[0];
+
+			Matrix j = -2 * vRel*navg1 / (1 / s->m_mass1 + 1 / p->m_mass + (navg1.transpose()*p->cI_1*cross(cross(rb1avg, navg1), rb1avg)).mat[0]);
+
+			s->J1 = s->J1 + j;
+
+			p->J.push_back(-1 * j);
+			p->rP.push_back(rb1avg);
+			
+		}
+		if (col2Points > 0)
+		{
+			r22avg = r22avg / col1Points;
+			rb2avg = rb2avg / col1Points;
+			navg2 = navg2 / col2Points;
+			normalize(navg2);
+
+			//v1=s->v2_t;
+			Matrix v2 = p->v_t + cross(p->w_t, rb2avg);
+
+			double vRel = ((s->v2_t - v2).transpose()*navg2).mat[0];
+
+			Matrix j = -2 * vRel*navg2 / (1 / s->m_mass2 + 1 / p->m_mass + (navg2.transpose()*p->cI_1*cross(cross(rb2avg, navg2), rb2avg)).mat[0]);
+
+			s->J2 = s->J2 + j;
+
+			p->J.push_back(-1 * j);
+			p->rP.push_back(rb1avg);
+
+		}
+
+
+	}
 	case RIGID_SPRING:
 	{
 		SpringSystem* s1=static_cast<SpringSystem*>(obj);

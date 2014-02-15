@@ -3,7 +3,7 @@
 
 float roty = 0.0;
 
-Simulation simulation(/*BoxSize*/30,/*Spheres*/0,/*Particles*/0, /*Springs*/2);
+Simulation simulation(/*BoxSize*/30,/*Spheres*/0,/*Particles*/1, /*Springs*/1);
 double targetdt=0.005;
 
 double colorG[] = { 1, 0.3, 0.15 };

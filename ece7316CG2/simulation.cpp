@@ -51,7 +51,7 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 	//translate the whole box to sit on the ground, not to have 0,0,0 as center
 	for (int i = 0; i < 6; i++)
 	{
-		objects[i]->p_plane->m_plane = translate(0, boxSize, 0)*rotX(45,true)*objects[i]->p_plane->m_plane;
+		objects[i]->p_plane->m_plane = translate(0, boxSize, 0)*rotX(30,true)*objects[i]->p_plane->m_plane;
 	}
 
 //////////////////////////// BOX READY //////////////
@@ -126,13 +126,13 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
 
 
-		double radius1 = 0.02*(rand() % 100) + 0.3;
-		double mass1 = 40* pow(radius1, 3);
-		double radius2 = 0.02*(rand() % 100) + 0.3;
-		double mass2 = 20 * pow(radius2, 3);
+		double radius1 = 0.03*(rand() % 100) + 0.15;
+		double mass1 = 4* pow(radius1, 3);
+		double radius2 = 0.03*(rand() % 100) + 0.15;
+		double mass2 = 4 * pow(radius2, 3);
 
-		double k1 = rand() %50 + 30;
-		double k2= rand() % 40 + 20;
+		double k1 = rand() %100 + 60;
+		double k2= rand() % 80 + 40;
 
 	    double x_t[] = { (rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1),
 									(rand() % (int)(boxSize - 2 * radius1)) + radius1	,
