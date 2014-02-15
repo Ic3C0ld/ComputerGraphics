@@ -19,18 +19,22 @@ class SpringSystem;
 
 
 void calcCollision(Plane*, Sphere*);
-void calcCollision(Plane* plane, Particle* particle, Matrix cp/*ContactPoint*/,
-													 Matrix  rp/*RelativePosFromCenterMass*/,
-													 Matrix vp /*VelocityofCp*/,
-													 Matrix n /*collision normal */,
-													 double vr/*Relative Velocity on the normal*/);
+void calcCollision(Plane* , Particle* ,// Matrix cp/*ContactPoint*/,
+													 Matrix&  rp/*RelativePosFromCenterMass*/,
+													// Matrix vp /*VelocityofCp*/,
+													 Matrix& n /*collision normal */,
+													 double vRel/*Relative Velocity on the normal*/);
 void calcCollision(Plane*, SpringSystem*);
-void calcCollision(Plane*, Sphere*);
 
-void calcCollision(Sphere* s1, Sphere* s2, Matrix normal12,double vrel);
-void calcCollision(Sphere*, Particle*);
+
+void calcCollision(Sphere* s1, Sphere* s2, Matrix normal12, double vrel);
+void calcCollision(Sphere*, Particle*, Matrix& r1,
+										Matrix& r2,
+										Matrix& n,
+										double vRel);
 void calcCollision(Sphere*, SpringSystem*);
 
+void calcCollision(Particle* p1, Particle* p2, Matrix& r1, Matrix& r2, Matrix& n, double  vRel);
 void calcCollision(Particle*, SpringSystem*);
 
 
@@ -119,7 +123,8 @@ public:
 	virtual Matrix getMomentum();
 	//
 	
-	Matrix applyV_t;//this will be calculated in a collision,
+	Matrix Jtotal;
+	
 
 };
 
@@ -137,7 +142,9 @@ public:
 	
 	Matrix currentPoints,cI,cI_1;
 
-	Matrix dw, dv; 
+	std::vector<Matrix> J;
+	std::vector<Matrix> rP;
+
 	///// ALL INFO here /////////////////////
 
 
@@ -152,10 +159,35 @@ public:
 };
 
 
-class StringSystem : public Rigid
+class SpringSystem : public Rigid
 {
 public:
-	StringSystem();
+	SpringSystem(Plane* plane2beAttachedto,
+				double xPercent, double yPercent,
+				double k1, double k2,
+				double mass1,double mass2,
+				double radius1,double radius2,
+				double x1t_4_1[], double x2t_4_1[],
+				double v1t_4_1[],double v2t_4_1[],
+				double color[]);
+
+	///// ALL INFO here /////////////////////
+	Matrix x0; //where the spring is attached
+
+	Matrix	x1_t, x2_t; //// positions w.r.t global frame
+	Matrix v0, v1_t, v2_t; //// velocities 
+	Matrix a0, a1_t, a2_t; ////accelerations
+
+	double m_k1, m_k2;
+	double m_mass1, m_mass2;
+	double m_radius1, m_radius2;
+	
+	double xPer, yPer;
+	Plane* plane;
+
+	Matrix J1,J2;
+
+	///// ALL INFO here /////////////////////
 
 	virtual void draw();
 

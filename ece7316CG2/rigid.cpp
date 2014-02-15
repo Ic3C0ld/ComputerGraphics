@@ -142,218 +142,95 @@ void Plane::checkCollision(Rigid* obj)
 	{
 		//Last try
 		Particle *p = static_cast<Particle*>(obj);
-		Matrix n = -1 * m_plane.getColumn(0); //so that it points inwards the box
+		Matrix n = -1 * m_plane.getColumn(0); //"normal" , so that it points inwards the box
+		Matrix p0 = m_plane.getColumn(1);		//"point0", get one plane point
+		int count = p->currentPoints.m_columns;// "#parts" , consisting the particle body
+
+		
+		Matrix rPavg(4,1);
+		int colPoints = 0;
+		for (int i = 0; i < count; i++)
+		{
+			Matrix tP = p->currentPoints.getColumn(i); //"testPoint" , current body part to test
+
+			//check for plane collision
+			double distance = ((tP - p0).transpose()*n).mat[0];
+
+			if (distance < p->m_radius) 
+			{//we have intersection or have gone completely out of box
+				
+				Matrix cP = tP - p->m_radius*n;			   //"collisionPoint" , current collision point 
+				Matrix rP = cP - p->x_t;					//collision point with respect to the center mass of the body
+				Matrix vP = p->v_t + cross(p->w_t, rP);		// vTotal= vLinear + w_t x r;
 
 
+				double  vRel = -1*(vP.transpose()*n).mat[0];	//vRelative = vPlane - Vpoint = 0 -vP -> dot with normal
+
+				if ( vRel > 0)
+				{//we have a collision
+					colPoints++;
+					rPavg = (rPavg + rP);
+					//calcCollision(this, p,  rP,  n, vRel);
+					
+				}
 
 
+			}	
+		}
+
+		if (colPoints>0)
+		{
+			rPavg = rPavg /colPoints;
+
+			Matrix vP = p->v_t + cross(p->w_t, rPavg);
+			double  vRel = -1 * (vP.transpose()*n).mat[0];
+			calcCollision(this, p, rPavg, n, vRel);
+
+		}
+
+		break;
+	}
+	case RIGID_SPRING:
+	{
+		Plane* p= this;
+		SpringSystem* s = static_cast<SpringSystem*>(obj);
 
 
+		Matrix pPoint = p->m_plane.getColumn(1);
+		Matrix n = -1 * p->m_plane.getColumn(0);//vector looking inwards
+
+		Matrix r01 = s->x1_t - pPoint;
+		Matrix r02 = s->x2_t - pPoint;
+
+		if ((r01.transpose()*n).mat[0] < s->m_radius1)
+		{//intersection with sphere 1
+
+			double vRel = ((-1 * s->v1_t).transpose()*n).mat[0];
+
+			if (vRel>0)
+			{//collision with sphere 1
+
+				Matrix j = (-2 * vRel) / (1 / s->m_mass1)*n;
+				s->J1 = s->J1 - j;
+			}
+
+		}
+
+		if ((r02.transpose()*n).mat[0] < s->m_radius2)
+		{//intersection with sphere 2
+
+			double vRel = ((-1 * s->v2_t).transpose()*n).mat[0];
+
+			if (vRel>0)
+			{//collision with sphere 2
+
+				Matrix j = (-2 * vRel) / (1 / s->m_mass2)*n;
+				s->J2 = s->J2 - j;
+			}
+
+		}
 
 
-
-
-
-		//// TRY ONE
-		//Particle *p = static_cast<Particle*>(obj);
-
-		//Matrix n = -1 * m_plane.getColumn(0);					//get the plane normal facing inwards the box
-		//Matrix p1 = m_plane.getColumn(1);						//get one plane points
-		//Matrix r12 = ((p->x_t - p1).transpose()*n).mat[0] * n; //r12 = ((x_t-p1)*n)*n == projection on the n vector
-
-		//int N = p->currentPoints.m_columns;
-
-
-
-		//std::vector<Matrix> J, RP;
-
-		//for (int i = 0; i < N; i++)
-		//{
-		//	Matrix testP = p->currentPoints.getColumn(i); //testing all spheres of the particle
-
-		//	//check for collision
-		//	Matrix v = testP - p1;
-		//	double dotError = (v.transpose()*n).mat[0];
-
-		//	
-
-		//	if (dotError < p->m_radius) //actual intersection
-		//	{
-		//		Matrix cP = testP - n*dotError;
-		//		Matrix rP = testP - p->x_t;
-
-		//		Matrix vRot = cross(p->w_t, rP);
-		//		Matrix vRel = -1 * (p->v_t + vRot);
-
-		//		double vrel = (vRel.transpose()*n).mat[0];
-
-		//		if (vrel>0)// the point is going towards the plane,
-		//		{
-
-		//			double num = -2 * vrel;
-		//			double den1 = 1.0 / p->m_mass;
-		//			double den2 = (n.transpose()*p->cI_1*(cross(cross(rP, n), rP))).mat[0];
-
-
-		//			Matrix t = cross(cross(n, vRel), n);
-
-		//			normalize(t);
-		//			Matrix nt = n + 0.0*t;
-		//			//normalize(nt);
-		//			Matrix  Jtemp = nt* num / (den1 + den2);
-		//			J.push_back(Jtemp);
-		//			RP.push_back(rP);
- 
-		//		}
-		//	}
-
-
-		//}
-
-		//for (int i = 0; i < J.size(); i++)
-		//{
-		//p->v_t = p->v_t - J[i] / p->m_mass/J.size();
-		//p->w_t = p->w_t - p->cI_1*cross(RP[i], J[i] / J.size());
-		//}
-
-		////TRY TWO
-		//Particle *p = static_cast<Particle*>(obj);
-
-		//Matrix n = -1 * m_plane.getColumn(0);					//get the plane normal facing inwards the box
-		//Matrix p1 = m_plane.getColumn(1);						//get one plane points
-		//Matrix r12 = ((p->x_t - p1).transpose()*n).mat[0] * n; //r12 = ((x_t-p1)*n)*n == projection on the n vector
-
-		//int N = p->currentPoints.m_columns;
-
-
-
-		//Matrix rPavg(4,1);
-		//for (int i = 0; i < N; i++)
-		//{
-		//	Matrix testP = p->currentPoints.getColumn(i); //testing all spheres of the particle
-
-		//	//check for collision
-		//	Matrix v = testP - p1;
-		//	double dotError = (v.transpose()*n).mat[0];
-
-		//	if (dotError < p->m_radius) //actual intersection
-		//	{
-		//		Matrix cP = testP - n*dotError;
-		//		Matrix rP = testP - p->x_t;
-
-		//		Matrix vRot = cross(p->w_t, rP);
-		//		Matrix vRel = -1 * (p->v_t + vRot);
-
-		//		double vrel = (vRel.transpose()*n).mat[0];
-
-		//		if (vrel<0)// the point is going towards the plane,
-		//		{
-		//			rPavg = rPavg + rP;
-		//								
-		//		}
-		//	}
-		//}
-
-		//Matrix vRot = cross(p->w_t, rPavg);
-		//Matrix vRel = -1 * (p->v_t + vRot);
-
-		//double num = -2 * ((vRel.transpose()*n).mat[0]);
-		//double den1 = 1.0 / obj->p_particle->m_mass;
-		//double den2 = (n.transpose()*obj->p_particle->cI_1*cross(cross(rPavg, n), rPavg)).mat[0];
-		//
-		//Matrix t = cross(cross( n,vRel), n);
-		//normalize(t);
-		//Matrix nt = n + 0.0*t;
-		////normalize(nt);
-		//Matrix  J = nt* num / (den1 + den2);
-		//
-		//p->v_t = p->v_t - J/p->m_mass ;
-		//p->w_t = p->w_t + p->cI_1*cross(rPavg, -1*J);
-		//
-
-//		//TRY 0
-//		//since all spheres in particle have the same radius		    |<--->|
-//		//the bounding sphere of it all is maximum  pCount*m_radius    ооооо
-//		Matrix ppoint = m_plane.getColumn(1);
-//		Matrix vector = ppoint - obj->p_particle->x_t;
-//		Matrix normal = m_plane.getColumn(0);
-//		
-//		double dotProduct = (vector.transpose()*normal).mat[0];
-//		double pCount = obj->p_particle->currentPoints.m_columns;
-//
-//		
-//
-//		/*if (dotProduct < obj->p_particle->m_radius*pCount)
-//		{*/
-//			bool collided = false;
-//
-//			//determine which of the spheres is the one potentially colliding
-//			for (int i = 0; (i < pCount); i++)
-//			{
-//				vector = ppoint - obj->p_particle->currentPoints.getColumn(i);
-//				dotProduct = (vector.transpose()*normal).mat[0];
-//
-//				Matrix n = -1 * normal;
-//				if (dotProduct < obj->p_particle->m_radius)
-//				{
-//
-//					Matrix cP = obj->p_particle->currentPoints.getColumn(i) + normal*obj->p_particle->m_radius;
-//
-//					Matrix rP = cP - obj->p_particle->x_t;
-//
-//					Matrix vRot = cross(obj->p_particle->w_t, rP);
-//					Matrix vRel = -1*(obj->p_particle->v_t + vRot); //V = Vlinear + W x  R;
-//
-//					double dot = (vRel.transpose()*n).mat[0];
-//
-//					if (dot > 0)
-//					{
-//						double num = -2 * ((vRel.transpose()*n).mat[0]);
-//						double den1 = 1.0 / obj->p_particle->m_mass;
-//						double den2 = (n.transpose()*obj->p_particle->cI_1*cross(cross(rP, n), rP)).mat[0];
-//
-//						Matrix t = cross(cross( n,vRel), n);
-//						normalize(t);
-//						Matrix nt = n + 0.3*t;
-//						//normalize(nt);
-//						Matrix  J = nt* num / (den1 + den2);
-//
-//						obj->p_particle->v_t = obj->p_particle->v_t - J / obj->p_particle->m_mass; /*- J / obj->p_particle->m_mass;*/;
-//
-//						Matrix dw = obj->p_particle->cI_1*cross(rP, -1*J);
-//						obj->p_particle->w_t = obj->p_particle->w_t + dw;
-//
-//
-//						/*Matrix T = n*dotProduct;
-//						obj->p_particle->currentPoints = translate(T.mat[0], T.mat[1], T.mat[2])*obj->p_particle->currentPoints;
-//*/
-//
-//						i=pCount;
-//					}
-//
-//
-//					
-//					
-//					////////////////////////////////////////////////////////////////
-//					//Matrix cP = obj->p_particle->x_t + dotProduct*normal;
-//					////TODO compute necessary variables for collision
-//					//Matrix rP = cP - obj->p_particle->x_t;
-//					//Matrix vP = obj->p_particle->v_t + cross(obj->p_particle->w_t, rP); //V = Vlinear + W x  R;
-//
-//					//double num = -2*((vP*n).mat[0]);
-//					//double den1 = 1.0 / obj->p_particle->m_mass;
-//					//double den2 = (n.transpose()*obj->p_particle->cI_1*cross(cross(rP, n), rP)).mat[0];
-//
-//					//Matrix  J = num / (den1 + den2) *n;
-//
-//					//obj->p_particle->v_t = obj->p_particle->v_t - J / obj->p_particle->m_mass;
-//					//obj->p_particle->w_t = obj->p_particle->w_t - obj->p_particle->cI_1*cross(cP, J);
-//
-//					 ////do not allow more collisions on this body //might fix it later somehow
-//				}
-//				
-//			
-//			}
 
 		break;
 	}
@@ -399,7 +276,7 @@ Sphere::Sphere(double radius, double mass, double Pxyz[], double Vxyz[],double c
 	X_t = Matrix(4, 1, xMat);
 	V_t = Matrix(4, 1, vMat);
 
-	applyV_t = Matrix(4, 1);//zero-ed
+	Jtotal = Matrix(4, 1);//zero-ed
 }
 void Sphere::draw()
 {
@@ -449,14 +326,124 @@ void Sphere::checkCollision(Rigid* obj)
 			if (n12.norm() < (m_radius + s->m_radius))
 			{
 				normalize(n12);
-				Matrix vRelative = s->V_t - V_t;
+				Matrix vRelative = V_t -s->V_t;
 				double vrel = (vRelative.transpose()*n12).mat[0];
 				
-				if (vrel < 0)
+				if (vrel > 0)
 				calcCollision(this, s, n12,vrel);
 			}
 
 			break;
+		}
+		case RIGID_PARTICLE:
+		{
+			Particle* p = static_cast<Particle*>(obj);
+			Sphere* s = this;
+
+			int pPoints = p->currentPoints.m_columns;
+
+			int colPoints = 0;
+			Matrix r1avg(4, 1);
+			Matrix r2avg(4, 1);
+			Matrix navg(4, 1);
+
+			for (int i = 0; i < pPoints; i++)
+			{
+				Matrix tp = p->currentPoints.getColumn(i);
+
+				Matrix r12 = tp - s->X_t;
+				Matrix n = r12 / r12.norm();
+
+				if (r12.norm() < s->m_radius + p->m_radius)
+				{//intersection
+
+					Matrix cP = s->X_t + r12*(s->m_radius) / (s->m_radius + p->m_radius);
+
+					Matrix r1 = cP - s->X_t;
+					Matrix r2 = cP - p->x_t;
+
+					Matrix v1 = s->V_t;
+					Matrix v2 = p->v_t + cross(p->w_t, r2);
+					
+					double vRel = ((v1-v2).transpose()*n).mat[0];
+
+					if (vRel > 0)
+					{//collision
+
+						r1avg = r1avg + r1;
+						r2avg = r2avg + r2;
+						navg = navg + n;
+
+						colPoints++;
+
+						i = pPoints;//break after the first hit
+
+					}//END if collision
+
+
+				}//END IF intersection
+
+			}//END for (i:pPoints)
+
+			if (colPoints > 0)
+			{
+				
+					r1avg = r1avg / colPoints;
+					r2avg = r2avg / colPoints;
+					navg = navg / colPoints;
+					normalize(navg);
+
+				//v1 is condidered the same as i dont allow any rotation for the spheres
+				Matrix v2 = p->v_t + cross(p->w_t, r2avg);
+
+				double vRel = ((s->V_t - v2).transpose()*navg).mat[0];
+
+				calcCollision(s, p,r1avg,r2avg, navg, vRel);
+			}
+		}
+			break;
+		case RIGID_SPRING:
+		{
+			SpringSystem* spring = static_cast<SpringSystem*>(obj);
+			Sphere* sphere = this;
+
+			Matrix r01 = spring->x1_t - sphere->X_t;
+			Matrix r02 = spring->x2_t - sphere->X_t;
+
+			Matrix n01 = r01 / r01.norm();
+			Matrix n02 = r02 / r02.norm();
+
+
+			if (r01.norm() < sphere->m_radius + spring->m_radius1)
+			{//intersection with first sphere of spring
+
+				double vRel1 = ((sphere->V_t - spring->v1_t).transpose()*n01).mat[0];
+
+				if (vRel1>0)
+				{//collision
+
+					Matrix j = (-2 * vRel1) / (1 / sphere->m_mass + 1 / spring->m_mass1)*n01;
+					sphere->Jtotal = sphere->Jtotal + j;
+					spring->J1 = spring->J1 - j;
+				}
+			}
+
+			if (r02.norm() < sphere->m_radius + spring->m_radius2)
+			{//intersection with second sphere of spring
+
+				double vRel2 = ((sphere->V_t - spring->v2_t).transpose()*n01).mat[0];
+
+				if (vRel2>0)
+				{//collision
+
+					Matrix j = (-2 * vRel2) / (1 / sphere->m_mass + 1 / spring->m_mass2)*n01;
+					sphere->Jtotal = sphere->Jtotal + j;
+					spring->J2 = spring->J2 - j;
+				}
+			}
+
+			break;
+
 		}
 		default:
 			break;
@@ -464,9 +451,9 @@ void Sphere::checkCollision(Rigid* obj)
 }
 void Sphere::applyCollisionResponse()
 {
-	V_t = V_t + applyV_t;//to be updated with J impulse
+	V_t = V_t + Jtotal/m_mass;//to be updated with J impulse
 
-	setZeros(applyV_t);
+	setZeros(Jtotal);
 
 }
 void Sphere::update(double dt)
@@ -503,11 +490,7 @@ Particle::Particle(int PartCount,double radius,double totalMass,double cmPositio
 	rotation = Quaternion(1, 0, 0, 0);
 	R_t = Quaternion2RotMatrix(rotation);
 
-	dv = dw = Matrix(4, 1);
-
 	m_color[0] = color3[0]; m_color[15] = color3[1]; m_color[2] = color3[2];
-
-
 
 
 	//radius *=3;
@@ -572,6 +555,7 @@ Particle::Particle(int PartCount,double radius,double totalMass,double cmPositio
 	
 
 	//// Calculate Inertia and Inverse /////////////
+	//// spheres' masses  are considered as point masses ////
 	double Ixx=0, Iyy=0, Izz=0, Ixy=0, Ixz=0, Iyz=0;
 	double x , y , z ;
 	for (int i = 0; i < points.m_columns; i++)
@@ -611,6 +595,7 @@ Particle::Particle(int PartCount,double radius,double totalMass,double cmPositio
 	I_1 = I.inverse();
 
 	I_1 = I_1 ;*/
+
 	currentPoints = translate(cmPosition)*points;
 	cI = I;
 	cI_1 = I_1;
@@ -681,7 +666,78 @@ void Particle::checkCollision(Rigid* obj)
 	{
 	case RIGID_PLANE:
 	{
+		//this method will not be called since will planes are first on the object 
+		break;
+	}
+	case RIGID_SPHERE:
+	{
+		break;
+	}
+	case RIGID_PARTICLE:
+	{
+		Particle *p1 = this; ////for legibility
+		Particle *p2 = static_cast<Particle*>(obj);
 
+		int p1Points = p1->currentPoints.m_columns;
+		int p2Points = p2->currentPoints.m_columns;
+
+
+		int colPoints=0;
+		Matrix rP1avg(4,1);
+		Matrix rP2avg(4,1);
+		Matrix navg(4,1);
+
+		for (int i = 0; i < p1Points; i++)
+		{
+			for (int j = 0; j < p2Points; j++)
+			{
+				Matrix tP1 = p1->currentPoints.getColumn(i);
+				Matrix tP2 = p2->currentPoints.getColumn(j);
+
+				Matrix r12 = tP2 - tP1;
+				Matrix n = r12 / r12.norm();
+				if (r12.norm() < (p1->m_radius + p2->m_radius))
+				{//intersection
+					Matrix cP = tP1+r12*(p1->m_radius) / (p1->m_radius + p1->m_radius); ////not completely accurate 
+
+					Matrix rp1 = cP - p1->x_t;
+					Matrix rp2 = cP - p2->x_t;
+
+					Matrix v1 = p1->v_t + cross(p1->w_t, rp1);
+					Matrix v2 = p2->v_t + cross(p2->w_t, rp2);
+
+					double vRel = ((v1 - v2).transpose()*n).mat[0];
+
+					if (vRel > 0)
+					{//collision
+						rP1avg = rP1avg + rp1;
+						rP2avg = rP2avg + rp2;
+						navg = navg + n;
+						colPoints++;
+						
+						//i = j = 100; // break after the first collision
+
+					}
+				}
+			}//FOR j:p2Points
+		}//FOR i:p1Points
+
+		if (colPoints > 0)
+		{
+	
+			rP1avg = rP1avg / colPoints;
+			rP2avg = rP2avg / colPoints;
+			normalize(navg);
+
+			Matrix vP1 = p1->v_t + cross(p1->w_t, rP1avg);
+			Matrix vP2 = p2->v_t + cross(p2->w_t, rP2avg);
+			double vRel = ((vP1 - vP2).transpose()*navg).mat[0];
+
+			calcCollision(p1, p2, rP1avg, rP2avg, navg, vRel);
+
+		}
+
+		break;
 	}
 	default:
 		break;
@@ -689,11 +745,15 @@ void Particle::checkCollision(Rigid* obj)
 }
 void Particle::applyCollisionResponse()
 {
-	v_t = v_t + dv;
-	w_t = w_t + dw;
-
-	setZeros(dv);
-	setZeros(dw);
+	for (int i = 0; i < J.size(); i++)
+	{
+		v_t = v_t + J[i] / m_mass;
+		w_t = w_t + cI_1*cross(rP[i], J[i]);
+	}
+	
+	
+	J.clear();
+	rP.clear();
 
 }
 
@@ -727,6 +787,333 @@ Matrix Particle::getMomentum()
 //////////////////////////////// END PARTICLE ////////
 
 
+
+
+
+
+/////////	Class SPRING	////////////////////////
+
+SpringSystem::SpringSystem(Plane* p, double xPercent,double yPercent,
+									 double k1, double k2,
+									 double mass_1, double mass_2,
+									 double radius_1, double radius_2,
+									 double x1t_4_1[], double x2t_4_1[],
+									 double v1t_4_1[], double v2t_4_1[],
+									 double color[])
+:Rigid()
+{
+	m_id = RIGID_SPRING;
+	p_spring = this; 
+
+	m_color[0] = color[0];	m_color[1] = color[1];	m_color[2] = color[2];
+	m_k1 = k1;				m_k2 = k2;
+	m_mass1 = mass_1;		m_mass2 = mass_2;
+	m_radius1 = radius_1;	m_radius2 = radius_2;
+
+	x1_t = Matrix(4, 1, x1t_4_1);	x2_t = Matrix(4, 1, x2t_4_1);
+	v1_t = Matrix(4, 1, v1t_4_1);	v2_t = Matrix(4, 1, v2t_4_1);
+
+	Matrix xV = p->m_plane.getColumn(3) - p->m_plane.getColumn(2);  //collumn(0)=normalVector,collumn(1)=centerPoint,the next ones are the side points
+	Matrix yV = p->m_plane.getColumn(4) - p->m_plane.getColumn(3);
+
+	x0 = p->m_plane.getColumn(2) + 0.01*xPercent*xV + 0.01*yPercent*yV;
+
+	v1_t = v2_t = a1_t=a2_t=Matrix(4, 1); //zero
+
+	double downMat[] = { 0, -1, 0, 0 };
+	Matrix down(4, 1,downMat);
+	x1_t = x0 - 2 * m_radius1*down;
+	x1_t = x1_t - 2 * m_radius2*down;
+
+	J1 = J2 = Matrix(4, 1);
+
+
+	xPer = xPercent;
+	yPer = yPercent;
+
+	plane = p;
+	
+}
+
+
+void SpringSystem::draw()
+{
+	glPushAttrib(GL_COLOR_BUFFER_BIT);
+	glColor3f(m_color[0], m_color[1], m_color[2]);
+	glPushMatrix();
+
+	//draw Spheres
+
+	glPushMatrix();
+	glTranslatef(x1_t.mat[0], x1_t.mat[1], x1_t.mat[2]);
+	glutSolidSphere(m_radius1,20,20);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(x2_t.mat[0], x2_t.mat[1], x2_t.mat[2]);
+	glutSolidSphere(m_radius2, 20, 20);
+	glPopMatrix();
+
+	//draw lines for Springs
+	
+	glLineWidth(3);
+	glBegin(GL_LINE_STRIP);
+	glVertex3f(x0.mat[0], x0.mat[1], x0.mat[2]);
+	glColor3f(1,0,0);
+
+	glVertex3f(x1_t.mat[0], x1_t.mat[1], x1_t.mat[2]);
+	glColor3f(0,1,0);
+
+	glVertex3f(x2_t.mat[0], x2_t.mat[1], x2_t.mat[2]);
+	glEnd();
+	glLineWidth(1);
+
+
+	glPopMatrix();
+	glPopMatrix();
+
+}
+
+
+void SpringSystem::update(double dt)
+{
+	
+	//// calculate forces 
+	// gravity and vectors
+	Matrix g(4, 1);
+	g.mat[1] = -9.81;
+
+	Matrix r01 = x1_t - x0;
+	Matrix n01 = r01 / r01.norm();
+
+	Matrix r12 = x2_t - x1_t;
+	Matrix n12 = r12 / r12.norm();
+
+	//Spring Force1
+	Matrix F21 = m_k2*(2 * m_radius1 - r12.norm())*n12;
+	Matrix F10 = m_k1*(2 * m_radius2 - r01.norm())*n01;
+
+
+	////CheckCollision with itself
+	if (r12.norm() < m_radius1 + m_radius2)
+	{//intersection
+
+		double vRel = ((v1_t - v2_t).transpose()*n12).mat[0];
+		if (vRel>0)
+		{//colliding
+
+			Matrix j = (-2 * vRel)/(1/m_mass1+1/m_mass2)*n12 ;
+			J1 = J1 + j;
+			J2 = J2 - j;
+		}
+	}
+
+	v1_t = v1_t + J1 / m_mass1;
+	v2_t = v2_t + J2 / m_mass2;
+
+
+	Matrix vrel01 = v1_t;
+	Matrix vrel12 = v2_t-v1_t;
+
+
+	////Update variables
+
+	x1_t = x1_t + v1_t*dt;
+	x2_t = x2_t + v2_t*dt;
+
+	v1_t = v1_t + a1_t*dt;
+	v2_t = v2_t + a2_t*dt;
+
+	a1_t = ((m_mass1 + m_mass2)*g + F10 - F21 - 3* vrel01) / m_mass1;
+	a2_t = (m_mass2*g + F21 - 3* vrel12) / m_mass2;
+
+
+
+	setZeros(J1);
+	setZeros(J2);
+
+
+}
+
+void SpringSystem::checkCollision(Rigid* obj)
+{
+	switch (obj->m_id)
+	{
+	case RIGID_PLANE:
+	{
+		SpringSystem* s = this;
+		Plane* p = static_cast<Plane*>(obj);
+
+		Matrix pPoint = p->m_plane.getColumn(1);
+		Matrix n = -1 * p->m_plane.getColumn(0);//vector looking inwards
+
+		Matrix r01 = s->x1_t - pPoint;
+		Matrix r02 = s->x2_t - pPoint;
+
+		if (r01.norm() < s->m_radius1)
+		{//intersection with sphere 1
+
+			double vRel = ((-1 * s->v1_t).transpose()*n).mat[0];
+			
+			if (vRel>0)
+			{//collision with sphere 1
+
+				Matrix j = (-2 * vRel) / (1 / s->m_mass1)*n;
+				s->J1 = s->J1 - j;
+			}
+
+		}
+
+		if (r02.norm() < s->m_radius2)
+		{//intersection with sphere 2
+
+			double vRel = ((-1 * s->v2_t).transpose()*n).mat[0];
+
+			if (vRel>0)
+			{//collision with sphere 2
+
+				Matrix j = (-2 * vRel) / (1 / s->m_mass2)*n;
+				s->J2 = s->J2 - j;
+			}
+
+		}
+
+
+
+		break;
+	}
+	case RIGID_SPHERE:
+	{
+
+		Sphere* sphere = static_cast<Sphere*>(obj);
+		SpringSystem* spring = this;
+
+		Matrix r01 = spring->x1_t - sphere->X_t;
+		Matrix r02 = spring->x2_t - sphere->X_t;
+
+		Matrix n01 = r01 / r01.norm();
+		Matrix n02 = r02 / r02.norm();
+
+
+		if (r01.norm() < sphere->m_radius + spring->m_radius1)
+		{//intersection with first sphere of spring
+
+			double vRel1 = ((sphere->V_t - spring->v1_t).transpose()*n01).mat[0];
+
+			if (vRel1>0)
+			{//collision
+
+				Matrix j = (-2 * vRel1) / (1 / sphere->m_mass + 1 / spring->m_mass1)*n01;
+				sphere->Jtotal = sphere->Jtotal + j;
+				spring->J1 = spring->J1 - j;
+			}
+		}
+
+		if (r02.norm() < sphere->m_radius + spring->m_radius2)
+		{//intersection with second sphere of spring
+
+			double vRel2 = ((sphere->V_t - spring->v2_t).transpose()*n01).mat[0];
+
+			if (vRel2>0)
+			{//collision
+
+				Matrix j = (-2 * vRel2) / (1 / sphere->m_mass + 1 / spring->m_mass2)*n01;
+				sphere->Jtotal = sphere->Jtotal + j;
+				spring->J2 = spring->J2 - j;
+			}
+		}
+
+		break;
+	}
+
+	case RIGID_SPRING:
+	{
+		SpringSystem* s1=static_cast<SpringSystem*>(obj);
+		SpringSystem* s2 = this;
+
+		Matrix r11 = s2->x1_t - s1->x1_t;
+		Matrix r12 = s2->x2_t - s1->x1_t;
+
+		Matrix r21 = s2->x1_t - s1->x2_t;
+		Matrix r22 = s2->x2_t - s1->x2_t;
+
+		Matrix n11 = r11 / r11.norm();
+		Matrix n12 = r12 / r12.norm();
+		Matrix n21 = r21 / r21.norm();
+		Matrix n22 = r22 / r22.norm();
+
+
+		if (r11.norm() < s1->m_radius1 + s2->m_radius1)
+		{//intersection with first sphere of spring
+			double vRel1 = ((s1->v1_t - s2->v1_t).transpose()*n11).mat[0];
+
+			if (vRel1>0)
+			{//collision
+				Matrix j = (-2 * vRel1) / (1 / m_mass1 + 1 / m_mass2)*n11;
+				s1->J1 = s1->J1 + j;
+				s2->J1 = s2->J1 - j;
+			}
+		}
+
+		if (r12.norm() < s1->m_radius1 + s2->m_radius1)
+		{//intersection with first sphere of spring
+
+			double vRel12 = ((s1->v1_t - s2->v2_t).transpose()*n12).mat[0];
+
+			if (vRel12>0)
+			{//collision
+
+				Matrix j = (-2 * vRel12) / (1 / m_mass1 + 1 / m_mass2)*n12;
+				s1->J1 = s1->J1 + j;
+				s2->J2 = s2->J2 - j;
+
+			}
+		}
+
+		if (r21.norm() < s1->m_radius1 + s2->m_radius1)
+		{//intersection with first sphere of spring
+
+			double vRel21 = ((s1->v2_t - s2->v1_t).transpose()*n21).mat[0];
+
+			if (vRel21>0)
+			{//collision
+
+				Matrix j = (-2 * vRel21) / (1 / m_mass1 + 1 / m_mass2)*n21;
+				s1->J2 = s1->J2 + j;
+				s2->J1 = s2->J1 - j;
+
+			}
+		}
+
+		if (r22.norm() < s1->m_radius1 + s2->m_radius1)
+		{//intersection with first sphere of spring
+
+			double vRel22 = ((s1->v2_t - s2->v2_t).transpose()*n22).mat[0];
+
+			if (vRel22>0)
+			{//collision
+
+				Matrix j = (-2 * vRel22) / (1 / m_mass1 + 1 / m_mass2)*n22;
+				s1->J2 = s1->J2 + j;
+				s2->J2 = s2->J2 - j;
+
+			}
+		}
+
+
+		break;
+	}
+	default:
+		break;
+	}
+}
+void SpringSystem::applyCollisionResponse(){}
+
+double  SpringSystem::getKinetik(){ return 0; }
+
+Matrix SpringSystem::getMomentum(){ return Matrix(4, 1); }
+//////////////////////////////// END SPRING ////////
+
 ///////////////////// GLOBAL ///////////////////////////////////////////
 
 void calcCollision(Plane* plane, Sphere* sphere)
@@ -747,8 +1134,12 @@ void calcCollision(Sphere* s1, Sphere* s2,Matrix n12,double vrel)
 
 	Matrix J = (-2.0*vrel / (1.0 / s1->m_mass + 1.0 / s2->m_mass)) * n12;
 
-	s1->V_t = s1->V_t -J/s1->m_mass; 
-	s2->V_t = s2->V_t +J /s2->m_mass;
+
+	s1->Jtotal = s1->Jtotal + J;
+	s2->Jtotal = s2->Jtotal - J;
+
+	/*s1->V_t = s1->V_t +J/s1->m_mass; 
+	s2->V_t = s2->V_t -J /s2->m_mass;*/
 
 	//double error = s1->m_radius + s2->m_radius - r12.norm();
 	double kinetic2 = s1->getKinetik() + s2->getKinetik();
@@ -777,15 +1168,57 @@ void calcCollision(Sphere* s1, Sphere* s2,Matrix n12,double vrel)
 }
 
 
-void calcCollision(Plane* plane, Particle* particle, Matrix cp/*ContactPoint*/,
-													Matrix  rp/*RelativePosFromCenterMass*/,
-													Matrix vp /*VelocityofCp*/,
-													Matrix n /*collision normal */,
-													double vr/*Relative Velocity on the normal*/)
+void calcCollision(Plane* , Particle* p, //Matrix cp/*ContactPoint*/,
+													Matrix&  rp/*RelativePosFromCenterMass*/,
+												//	Matrix vp /*VelocityofCp*/,
+													Matrix& n /*collision normal */,
+													double  vRel/*Relative Velocity on the normal*/)
 {
-	//	J= - (vp*n) / (1/m1  + n*(invInertia1*(rp x n) x rp	)
+	//	J= -2*(vp*n) / (1/m1  + n*(invInertia1*(rp x n) x rp	)
+
+
+	double J = -2 * vRel / (1 / p->m_mass + (n.transpose()*(p->cI_1*cross(cross(rp, n), rp))).mat[0]);
+
+	p->J.push_back(-1 * J*n );
+	p->rP.push_back(rp);
 
 
 }
 
 
+void calcCollision(Particle* p1, Particle* p2, Matrix& r1, Matrix& r2, Matrix& n, double vRel)
+{
+	double nom = -2 * vRel;
+	double den1 = 1 / p1->m_mass + 1/p2->m_mass;
+	double den2 = (n.transpose()*(p1->cI_1*cross(cross(r1, n), r1))).mat[0];
+	double den3 = (n.transpose()*(p2->cI_1*cross(cross(r2, n), r2))).mat[0];
+
+
+	double J = nom / (den1 + den2 + den3);
+
+	p1->J.push_back(J*n);
+	p2->J.push_back(-1 * J*n);
+
+	p1->rP.push_back(r1);
+	p2->rP.push_back(r2);
+
+
+
+}
+
+
+void calcCollision(Sphere* s, Particle* p, Matrix& r1, Matrix& r2, Matrix& n, double vRel)
+{
+	double nom = -2 * vRel;
+
+	double den1 = 1 / s->m_mass + 1 / p->m_mass;
+	double den2 = (n.transpose()*(p->cI_1*cross(cross(r2, n), r2))).mat[0];
+
+	double J = nom / (den1 + den2);
+
+	p->J.push_back(-1*J*n);
+	p->rP.push_back(r2);
+
+	s->Jtotal = s->Jtotal + J*n;
+
+}

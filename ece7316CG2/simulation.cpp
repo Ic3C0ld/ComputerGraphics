@@ -51,7 +51,7 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 	//translate the whole box to sit on the ground, not to have 0,0,0 as center
 	for (int i = 0; i < 6; i++)
 	{
-		objects[i]->p_plane->m_plane = translate(0, boxSize / 2, 0)*objects[i]->p_plane->m_plane;
+		objects[i]->p_plane->m_plane = translate(0, boxSize, 0)*rotX(45,true)*objects[i]->p_plane->m_plane;
 	}
 
 //////////////////////////// BOX READY //////////////
@@ -63,7 +63,7 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 
 
 		double radius = 0.02*(rand() % 100) + 1;
-		double mass = 4*pow(radius, 3);
+		double mass = 10*pow(radius, 3);
 
 		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius), (rand() % (int)(boxSize - 2*radius))+radius, (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius) };
 		double v_t[] = { (rand() % 200) - 10, (rand() % 200) - 10, (rand() % 200) - 10 };
@@ -89,19 +89,23 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 	for (int i = 0; i < particles; i++)
 	{
 		double radius = 0.02*(rand() % 100) + 0.3;
-		double mass = 4 * pow(radius, 3);
+		double mass = 10 * pow(radius, 3);
 
 
 		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius),
 									(rand() % (int)(boxSize - 2 * radius)) + radius	,
 						(rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius)	,
 																				1 };
-		//double v_t[] = { (rand() % 200) - 10, (rand() % 200) - 10, (rand() % 200) - 10 ,0};
-		//double w_t[] = { 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10 ,0};
-		double v_t[] = { -30,0,0,0};
+		double v_t[] = { (rand() % 200) - 10, (rand() % 200) - 10, (rand() % 200) - 10 ,0};
+		double w_t[] = { 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10, 0.1*(rand() % 200) - 10 ,0};
+		/*double v_t[] = { -30,0,0,0};
 
 		double w_t[] = {0, 10, 0,0};
 
+		double x_t[] = { (rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius),
+									15,
+						(rand() % (int)(boxSize - radius)) - 0.5*(boxSize - radius)	,
+																				1 };*/
 		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
 
 		Particle *p = new Particle(5, radius, mass, x_t, v_t, w_t,color3);
@@ -109,6 +113,42 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 
 	}
 	//////////////////////////// Particles READY //////////////
+
+
+	//// SPRINGS //////////////////////
+
+
+	for (int i = 0; i < springs; i++)
+	{
+		double xPercent = (rand() % 80) + 10;
+		double yPercent = (rand() % 80) + 10;
+
+		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
+
+
+		double radius1 = 0.02*(rand() % 100) + 0.3;
+		double mass1 = 40* pow(radius1, 3);
+		double radius2 = 0.02*(rand() % 100) + 0.3;
+		double mass2 = 20 * pow(radius2, 3);
+
+		double k1 = rand() %50 + 30;
+		double k2= rand() % 40 + 20;
+
+	    double x_t[] = { (rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1),
+									(rand() % (int)(boxSize - 2 * radius1)) + radius1	,
+						(rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1)	,
+																				1 };
+		 double x2_t[] = { (rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1),
+									(rand() % (int)(boxSize - 2 * radius1)) + radius1	,
+						(rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1)	,
+																				1 };
+		 double v[] = { 0, 0, 0, 0 };
+
+		 SpringSystem* s=new SpringSystem(top, xPercent,yPercent,k1,k2,mass1,mass2,radius1,radius2,x_t,x2_t,v,v,color3);
+		 objects.push_back(s);
+	
+	}
+
 
 }
 
@@ -146,7 +186,7 @@ void Simulation::update(double simdt)
 		totalKinetic += objects[i]->getKinetik();
 	}
 
-	std::cout << "TotalKinetic== " << totalKinetic << std::endl;
+	//std::cout << "TotalKinetic== " << totalKinetic << std::endl;
 	//system("CLS");
 
 	totalKinetic = 0;

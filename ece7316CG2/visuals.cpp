@@ -3,25 +3,29 @@
 
 float roty = 0.0;
 
-Simulation simulation(/*BoxSize*/20,/*Spheres*/0,/*Particles*/1, /*Springs*/0);
+Simulation simulation(/*BoxSize*/30,/*Spheres*/0,/*Particles*/0, /*Springs*/2);
 double targetdt=0.005;
 
+double colorG[] = { 1, 0.3, 0.15 };
+Plane *top = new Plane(10, colorG);
+
+double x1[] = { -40, -200, 0, 1 };
+double x2[] = { 40, 40, 0, 1 };
+double v[] = { 0, 0, 0, 0 };
+
+SpringSystem test(top, 35, 65, 10, 10, 5, 4, 4, 1, x1, x2, v, v, colorG);
 
 
-int count = 5;
-double mass = 10;
-double radius = 1;
-double Pxyz[] = { 0, 20, 0, 0 };
-double Vxyz[] = { 3, 1, 5, 0 };
-double w[] = { 0, 20, 0, 0 };
-double color3[] = {1,0,1};
-//Particle particle(count, radius, mass, Pxyz, Vxyz, w,color3);
+
 
 
 void testVariableSetup()
 {
 	
 	
+	top->m_plane = translate(0, 50, 0)*top->m_plane;
+	test.x0 = translate(0, 50, 0)*test.x0;
+
 }
 
 
@@ -45,15 +49,9 @@ void Render()
 	simulation.draw();
 
 	//// TESTING   ///////////////////////////////////////////////
-	
-	
-
-
-	/*particle.draw();
-	particle.update(targetdt/10);*/
-
-
-
+	/*test.draw();
+	top->draw();
+*/
 	glutSwapBuffers();          
 }
 
@@ -62,6 +60,7 @@ void Render()
 void Idle()
 {
 	roty += 0.002;
+	//test.update(targetdt);
 	simulation.update(targetdt);
 	glutPostRedisplay();
 }
