@@ -5,9 +5,9 @@
 #include <ctime>
 #include <iostream>//for debugging purposes
 #include <cstdlib>//for debugging
-#include "rigid.h"
+#include "globals.h"
 #include "controls.h"
-
+#include "rigid.h"
 
 class Simulation
 {

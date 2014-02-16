@@ -1,9 +1,12 @@
 #include "visuals.h"
 #include "globals.h"
 
-float roty = 0.0;
-
-Simulation simulation(/*BoxSize*/30,/*Spheres*/0,/*Particles*/1, /*Springs*/1);
+clock_t simTimeClocks = 0;
+int boxSize = 30;
+int sphereCount = 0;
+int particleCount = 1;
+int springCount =0;
+extern Simulation* simulation;
 double targetdt=0.005;
 
 double colorG[] = { 1, 0.3, 0.15 };
@@ -42,12 +45,12 @@ void Render()
 	drawFloor();
 
 
-
-
 	////////////// DRAWING /////////////////////////////
 
-	simulation.draw();
+	simulation->draw();
 
+
+	old_draw_HUD();
 	//// TESTING   ///////////////////////////////////////////////
 	/*test.draw();
 	top->draw();
@@ -58,22 +61,32 @@ void Render()
 //-----------------------------------------------------------
 
 void Idle()
-{
-	roty += 0.002;
-	//test.update(targetdt);
-	simulation.update(targetdt);
+{ //baa, DEN katafera na to isorrophsw na kanei aneksarthta tou idleDT
+
+	clock_t timeNow=clock();
+
+	double deltaT = (timeNow - simTimeClocks) / CLOCKS_PER_SEC;
+	if (deltaT > targetdt)
+	{
+		simulation->update(targetdt);
+		simTimeClocks -= targetdt*CLOCKS_PER_SEC;
+		
+	}
+	
 	glutPostRedisplay();
+
+	
 }
 
 
 void Setup()  // TOUCH IT !! 
 {
 	testVariableSetup();
-
-
+	initMenus();
+	simTimeClocks = clock();
 	initCameraVars();
 	initControlVars();
-
+	simulation = new  Simulation(boxSize, sphereCount, particleCount, springCount);
 	glEnable(GL_BLEND);
 
 	//Parameter handling
@@ -91,9 +104,8 @@ void Setup()  // TOUCH IT !!
 	glEnable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-
+	/*glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);*/
 
 	// Black background
 	glClearColor(0.05f, 0.05f, 0.05f, 1.0f);

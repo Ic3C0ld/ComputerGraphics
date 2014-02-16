@@ -2,12 +2,14 @@
 
 
 extern double totalKinetic;
+extern std::vector<double>data_time;
+extern double simTime;
 
 //Class Simulation//
 
 Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 {
-	sim_dt = target_dt = 0.001; //for now
+
 	
 	
 //// BOX: Create planes  ////////////////////////
@@ -156,39 +158,122 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 
 void Simulation::draw()
 {
+	
 	for (int i = 0; i < objects.size(); i++)
 	{
-		objects[i]->draw();
+		bool draw = true;
+
+		switch (objects[i]->m_id)
+		{
+		case RIGID_SPRING:
+		{
+			if (pb4_use_springs_with_speedchange==false)
+				draw = false;
+			break;
+		}
+		case RIGID_PARTICLE:
+		{
+			if ((pB2_use_particles_no_rotation && pB2_use_particles_with_rotation) == false)
+				draw = false;
+			break;
+		}
+		default:
+			break;
+		}
+		
+		if (draw == true)
+			objects[i]->draw();
 	}
 
+	
 }
 void Simulation::update(double simdt)
 {
+
+	simTime += simdt;
+	data_time.push_back(simTime);
+	//check collisions
 	for (int i = 0; i < objects.size(); i++)
 	{
-		for (int j = i+1; j < objects.size(); j++)
+		bool update = true;
+
+		switch (objects[i]->m_id)
 		{
-			objects[i]->checkCollision(objects[j]);
+		case RIGID_SPRING:
+		{
+			if (pb4_use_springs_with_speedchange == false)
+				update = false;
+			break;
+		}
+		case RIGID_PARTICLE:
+		{
+			if (pB2_use_particles_no_rotation && pB2_use_particles_with_rotation == false)
+				update = false;
+			break;
+		}
+		default:
+			break;
 		}
 
+
+		if (update == true)
+		{
+			for (int j = i + 1; j < objects.size(); j++)
+			{
+				if ((objects[j]->m_id == RIGID_PARTICLE) &&(pB2_use_particles_no_rotation && pB2_use_particles_with_rotation == false) ||
+					(objects[j]->m_id == RIGID_PARTICLE) && (pb4_use_springs_with_speedchange==false))
+				{
+					continue;
+				}
+				objects[i]->checkCollision(objects[j]);
+			}
+		}
+			
+
+
 	}
 
-	for (int i = 0; i < objects.size(); i++)
-	{
-		objects[i]->applyCollisionResponse();
-		objects[i]->update(simdt);
-		
-	}
-
+	//apply collisions and update
 	double totalKinetic = 0;
 	for (int i = 0; i < objects.size(); i++)
 	{
-		totalKinetic += objects[i]->getKinetik();
+		bool update = true;
+
+		switch (objects[i]->m_id)
+		{
+		case RIGID_SPRING:
+		{
+			if (pb4_use_springs_with_speedchange == false)
+				update = false;
+			break;
+		}
+		case RIGID_PARTICLE:
+		{
+			if (pB2_use_particles_no_rotation && pB2_use_particles_with_rotation == false)
+				update = false;
+			break;
+		}
+		default:
+			break;
+		}
+
+		if (update == true)
+		{
+			totalKinetic += objects[i]->getKinetik();
+			objects[i]->applyCollisionResponse();
+			objects[i]->update(simdt);
+		}
+		
+		
 	}
 
-	//std::cout << "TotalKinetic== " << totalKinetic << std::endl;
-	//system("CLS");
-
 	totalKinetic = 0;
+
+	
+	
+
+	
+
+	
 
 }

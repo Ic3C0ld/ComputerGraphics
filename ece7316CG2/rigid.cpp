@@ -1,5 +1,41 @@
 #include "rigid.h"
 
+////extern variables and flags
+int sphere_2_wallCollisions = 0;
+int particle_2_wallCollisions = 0;
+int spring_2_wallCollisions = 0;
+double simTime = 0;
+
+std::vector<double>data_sphere_2_wallCollisions;
+std::vector<double>data_particle_2_wallCollisions;
+std::vector<double>data_spring_2_wallCollisions;
+std::vector<double>data_time;
+
+
+
+int collisions_2_everyone_else = 0;
+std::vector<double>data_collisions_2_everyone_else;
+
+
+int followUpObjID = 6;
+
+
+
+ bool pA_collide_no_speedchange = true;
+ bool pA_collide_with_speedchange = true;
+ bool pA_collisionstats = true;
+
+//PartB
+ bool pB1_use_material_properties = true;
+ bool pB2_use_particles_no_rotation = false;
+ bool pB2_use_particles_with_rotation = true;
+
+ bool pB3_use_followUp_camera = false;
+
+ bool pb4_use_springs_with_speedchange = true;
+
+
+
 /////////	Class RIGID		////////////////////////
 
 Rigid::Rigid()
@@ -280,6 +316,17 @@ Sphere::Sphere(double radius, double mass, double Pxyz[], double Vxyz[],double c
 }
 void Sphere::draw()
 {
+	if (pB1_use_material_properties == true)
+	{
+		glDisable(GL_COLOR_MATERIAL);
+		GLfloat material_diffuse[] = { m_color[0], m_color[1], m_color[2], 1 };
+		GLfloat material_specular[] = { m_color[0], m_color[1], m_color[2], 1 };
+		GLfloat material_shininess[] = {30*( m_color[0]+ m_color[1]+ m_color[2] )};
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
+		glMaterialfv(GL_FRONT, GL_SHININESS, material_shininess);
+
+	}
 	glPushAttrib(GL_COLOR_BUFFER_BIT);
 	glColor3f(m_color[0], m_color[1], m_color[2]);
 
@@ -289,6 +336,9 @@ void Sphere::draw()
 	glPopMatrix();
 
 	glPopAttrib();
+
+	if (pB1_use_material_properties == true)		glEnable(GL_COLOR_MATERIAL);
+
 
 }
 void Sphere::checkCollision(Rigid* obj)
@@ -320,19 +370,37 @@ void Sphere::checkCollision(Rigid* obj)
 		}
 		case RIGID_SPHERE:
 		{
-			Sphere* s = static_cast<Sphere*>(obj);
-			Matrix n12 = s->X_t - X_t;
+			Sphere* s1 = this;
+			Sphere* s2 = static_cast<Sphere*>(obj);
+			Matrix n12 = s2->X_t -s1-> X_t;
 
-			if (n12.norm() < (m_radius + s->m_radius))
+			if (n12.norm() < (s1->m_radius + s2->m_radius))
 			{
 				normalize(n12);
-				Matrix vRelative = V_t -s->V_t;
+				Matrix vRelative = s1->V_t - s2->V_t;
 				double vrel = (vRelative.transpose()*n12).mat[0];
-				
-				if (vrel > 0)
-				calcCollision(this, s, n12,vrel);
-			}
 
+				if (vrel > 0)
+				{
+					if (pA_collide_with_speedchange == true)
+					{
+						calcCollision(s1, s2, n12, vrel);
+					}
+					else if (pA_collide_no_speedchange)
+					{
+						double v1dot = (s1->V_t.transpose()*n12).mat[0];
+						double v2dot = (s2->V_t.transpose()*n12).mat[0];
+
+						s1->V_t = s1->V_t - 2 * v1dot*n12;
+						s2->V_t = s2->V_t - 2 * v2dot*n12;
+
+					}
+
+				}
+			}
+				
+
+			
 			break;
 		}
 		case RIGID_PARTICLE:
@@ -425,6 +493,9 @@ void Sphere::checkCollision(Rigid* obj)
 					Matrix j = (-2 * vRel1) / (1 / sphere->m_mass + 1 / spring->m_mass1)*n01;
 					sphere->Jtotal = sphere->Jtotal + j;
 					spring->J1 = spring->J1 - j;
+
+					data_collisions_2_everyone_else.push_back(++collisions_2_everyone_else);
+
 				}
 			}
 
@@ -439,6 +510,9 @@ void Sphere::checkCollision(Rigid* obj)
 					Matrix j = (-2 * vRel2) / (1 / sphere->m_mass + 1 / spring->m_mass2)*n01;
 					sphere->Jtotal = sphere->Jtotal + j;
 					spring->J2 = spring->J2 - j;
+
+					data_collisions_2_everyone_else.push_back(++collisions_2_everyone_else);
+
 				}
 			}
 
@@ -874,6 +948,8 @@ void Particle::applyCollisionResponse()
 	for (int i = 0; i < J.size(); i++)
 	{
 		v_t = v_t + J[i] / m_mass;
+
+		if (pB2_use_particles_with_rotation==true)
 		w_t = w_t + cI_1*cross(rP[i], J[i]);
 	}
 	
@@ -1007,7 +1083,7 @@ void SpringSystem::update(double dt)
 	//// calculate forces 
 	// gravity and vectors
 	Matrix g(4, 1);
-	g.mat[1] = -9.81;
+	g.mat[1] = -9.81*10;//hack to make gravity feel like one ,,dont know why it behaves like the moon instead of the earth ,maybe the NOT real time calculations;? FIX PENDING
 
 	Matrix r01 = x1_t - x0;
 	Matrix n01 = r01 / r01.norm();
@@ -1375,6 +1451,8 @@ void calcCollision(Plane* plane, Sphere* sphere)
 		sphere->V_t = sphere->V_t - 2 * nSpeed* plane->m_plane.getColumn(0);
 	}
 	
+	
+	data_sphere_2_wallCollisions.push_back(++sphere_2_wallCollisions);
 
 }
 void calcCollision(Sphere* s1, Sphere* s2,Matrix n12,double vrel)
@@ -1384,6 +1462,7 @@ void calcCollision(Sphere* s1, Sphere* s2,Matrix n12,double vrel)
 	Matrix J = (-2.0*vrel / (1.0 / s1->m_mass + 1.0 / s2->m_mass)) * n12;
 
 
+	
 	s1->Jtotal = s1->Jtotal + J;
 	s2->Jtotal = s2->Jtotal - J;
 
@@ -1412,7 +1491,7 @@ void calcCollision(Sphere* s1, Sphere* s2,Matrix n12,double vrel)
 	//	s1->V_t = s1->V_t + (v1after - v1prev)*r12;
 	//	s2->V_t = s2->V_t + (v2after - v2prev)*r12;
 
-	
+	data_collisions_2_everyone_else.push_back(++collisions_2_everyone_else);
 	
 }
 
@@ -1431,7 +1510,7 @@ void calcCollision(Plane* , Particle* p, //Matrix cp/*ContactPoint*/,
 	p->J.push_back(-1 * J*n );
 	p->rP.push_back(rp);
 
-
+	data_particle_2_wallCollisions.push_back(++particle_2_wallCollisions);
 }
 
 
@@ -1452,6 +1531,7 @@ void calcCollision(Particle* p1, Particle* p2, Matrix& r1, Matrix& r2, Matrix& n
 	p2->rP.push_back(r2);
 
 
+	data_collisions_2_everyone_else.push_back(++collisions_2_everyone_else);
 
 }
 
@@ -1469,5 +1549,7 @@ void calcCollision(Sphere* s, Particle* p, Matrix& r1, Matrix& r2, Matrix& n, do
 	p->rP.push_back(r2);
 
 	s->Jtotal = s->Jtotal + J*n;
+
+	data_collisions_2_everyone_else.push_back(++collisions_2_everyone_else);
 
 }
