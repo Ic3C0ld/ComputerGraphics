@@ -128,13 +128,13 @@ Simulation::Simulation(double boxSize, int spheres, int particles, int springs)
 		double color3[] = { 0.1*(rand() % 10), 0.1*(rand() % 10), 0.1*(rand() % 10) };
 
 
-		double radius1 = 0.03*(rand() % 100) + 0.15;
+		double radius1 = 0.03*(rand() % 100) + 0.2;
 		double mass1 = 4* pow(radius1, 3);
-		double radius2 = 0.03*(rand() % 100) + 0.15;
+		double radius2 = 0.03*(rand() % 100) + 0.2;
 		double mass2 = 4 * pow(radius2, 3);
 
-		double k1 = rand() %100 + 60;
-		double k2= rand() % 80 + 40;
+		double k1 = rand() %100 + 80;
+		double k2= rand() % 80 + 60;
 
 	    double x_t[] = { (rand() % (int)(boxSize - radius1)) - 0.5*(boxSize - radius1),
 									(rand() % (int)(boxSize - 2 * radius1)) + radius1	,

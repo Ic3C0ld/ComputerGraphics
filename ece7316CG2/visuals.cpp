@@ -3,9 +3,9 @@
 
 clock_t simTimeClocks = 0;
 int boxSize = 30;
-int sphereCount = 0;
-int particleCount = 1;
-int springCount =0;
+int sphereCount = 5;
+int particleCount = 2;
+int springCount =3;
 extern Simulation* simulation;
 double targetdt=0.005;
 

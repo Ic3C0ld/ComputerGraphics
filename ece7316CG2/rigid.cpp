@@ -27,7 +27,7 @@ int followUpObjID = 6;
 
 //PartB
  bool pB1_use_material_properties = true;
- bool pB2_use_particles_no_rotation = false;
+ bool pB2_use_particles_no_rotation = true;
  bool pB2_use_particles_with_rotation = true;
 
  bool pB3_use_followUp_camera = false;
@@ -1083,7 +1083,7 @@ void SpringSystem::update(double dt)
 	//// calculate forces 
 	// gravity and vectors
 	Matrix g(4, 1);
-	g.mat[1] = -9.81*10;//hack to make gravity feel like one ,,dont know why it behaves like the moon instead of the earth ,maybe the NOT real time calculations;? FIX PENDING
+	g.mat[1] = -9.81*5;//hack to make gravity feel like one ,,dont know why it behaves like the moon instead of the earth ,maybe the NOT real time calculations;? FIX PENDING
 
 	Matrix r01 = x1_t - x0;
 	Matrix n01 = r01 / r01.norm();
@@ -1126,8 +1126,8 @@ void SpringSystem::update(double dt)
 	v1_t = v1_t + a1_t*dt;
 	v2_t = v2_t + a2_t*dt;
 
-	a1_t = ((m_mass1 + m_mass2)*g + F10 - F21 - 3* vrel01) / m_mass1;
-	a2_t = (m_mass2*g + F21 - 3* vrel12) / m_mass2;
+	a1_t = ((m_mass1 + m_mass2)*g + F10 - F21 - 5* vrel01) / m_mass1;
+	a2_t = (m_mass2*g + F21 - 5* vrel12) / m_mass2;
 
 
 

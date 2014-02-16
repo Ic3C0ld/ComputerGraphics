@@ -551,7 +551,7 @@ void old_draw_HUD()
 
 	//DrawData
 	glPushMatrix();
-	glTranslatef(-0.95*orthoSize,-0.95*orthoSize,0);
+	glTranslatef(-0.95*orthoSize,-1.55*orthoSize,0);
 	drawAxis(orthoSize, data_sphere_2_wallCollisions, data_time, std::string("ball2wall collisions"));
 	glTranslatef(+0.95*orthoSize, 0, 0);
 	drawAxis(orthoSize, data_collisions_2_everyone_else, data_time, std::string("any Other collisions"));
@@ -733,7 +733,13 @@ void menuHandler(int id)
 	}
 	case FOLLOW_UP_CAMERA:
 	{
+		if (pB3_use_followUp_camera == true)
+		{
+			initCameraVars();
+		}
+		
 		pB3_use_followUp_camera = !pB3_use_followUp_camera;
+
 		break;
 	}
 	case RESTART:
